@@ -4,6 +4,10 @@ Aplicativo Windows de busca local de peticoes e documentos juridicos.
 
 Criador: **LEONARDO CARDOSO DE MELO TEIXEIRA MENDES**.
 
+## Download
+
+Baixe o instalador Windows em [`downloads/KD_minha_PET.2.0_Setup.exe`](downloads/KD_minha_PET.2.0_Setup.exe).
+
 ## Principais recursos
 
 - Busca por nome, caminho e, quando habilitado, conteudo de arquivos.
