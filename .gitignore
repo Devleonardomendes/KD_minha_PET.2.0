@@ -1,0 +1,29 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# PyInstaller/build outputs
+build/
+build-setup/
+dist/
+installer/payload/
+*.exe
+*.pkg
+*.toc
+*.pyz
+
+# Logs and temporary files
+*.log
+*.tmp
+.tmp*/
+
+# Windows metadata
+Thumbs.db
+Desktop.ini
+desktop.ini
