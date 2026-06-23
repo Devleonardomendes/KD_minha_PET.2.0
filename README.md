@@ -69,13 +69,63 @@ Use `Exportar logs` para salvar:
 - O script principal de build e `build_exe.ps1`.
 - O script de instalador e `installer/build_setup.ps1`.
 
-## Requisitos recomendados
+## Requisitos de sistema
+
+### Cenario 1: busca local, sem LM Studio
+
+Configuracao minima:
 
 - Windows 10 ou Windows 11, 64 bits.
-- SSD.
-- 16 GB de RAM ou mais.
-- Para uso intensivo com PDFs grandes ou escaneados, recomenda-se 32 GB de RAM e CPU Intel Core i7/Ryzen 7 ou superior.
-- A utilizacao desta ferramenta por usuarios equipados com Intel i5 ou Ryzen 5 ou memoria RAM de 8 GB deve ser realizada com cautela, limitando a busca a pastas com poucos arquivos. Este app nao e recomendado para setups inferiores as especificacoes minimas.
+- CPU Intel i5/Ryzen 5 ou superior.
+- 8 GB de RAM.
+- SSD com 10 GB livres.
+- GPU dedicada nao e obrigatoria.
+- Uso recomendado apenas para pastas pequenas ou medias e com OCR limitado.
+
+Configuracao recomendada:
+
+- Windows 10 ou Windows 11, 64 bits.
+- CPU Intel i7/Ryzen 7 ou superior.
+- 16 GB de RAM.
+- SSD/NVMe com 30 GB livres.
+- 32 GB de RAM para uso intensivo com PDFs grandes, muitos arquivos ou OCR frequente.
+
+### Cenario 2: busca com LM Studio usando Gemma 4 12B QAT
+
+Base de calculo:
+
+- O LM Studio recomenda, no Windows, CPU com AVX2, 16 GB de RAM e GPU dedicada com pelo menos 4 GB de VRAM.
+- O Gemma 4 12B possui 11,95B parametros, conforme o model card oficial do Google.
+- O modelo local `google/gemma-4-12b-qat` medido no LM Studio ocupa 7,15 GB em disco.
+- A memoria de inferencia estimada para o modelo foi calculada como `7,15 GB x 1,25 = 8,94 GB`, arredondada para 9 GB em RAM+VRAM.
+- A integracao do KD_minha_PET carrega o modelo com contexto 8192; contextos maiores podem exigir mais memoria.
+
+Memoria RAM+VRAM por perfil:
+
+| Perfil da maquina | RAM minima calculada | Memoria total minima RAM+VRAM | RAM recomendada | Memoria total recomendada RAM+VRAM |
+|---|---:|---:|---:|---:|
+| Sem GPU dedicada | 32 GB | 32 GB | 48 GB | 48 GB |
+| GPU com 8 GB de VRAM | 24 GB | 32 GB | 48 GB | 56 GB |
+| GPU com 12 GB de VRAM | 24 GB | 36 GB | 32 GB | 44 GB |
+| GPU com 16 GB de VRAM | 16 GB | 32 GB | 32 GB | 48 GB |
+
+Configuracao minima para LM Studio:
+
+- Windows 10 ou Windows 11, 64 bits.
+- CPU com AVX2.
+- 32 GB de memoria total RAM+VRAM.
+- SSD com 30 GB livres para aplicativo, modelo e arquivos temporarios.
+- Sem GPU dedicada, o uso e possivel, mas a inferencia sera feita em CPU/RAM e sera bem mais lenta.
+
+Configuracao recomendada para LM Studio:
+
+- Windows 11, 64 bits.
+- CPU Intel i7/Ryzen 7 ou superior.
+- GPU dedicada com 12 GB ou 16 GB de VRAM.
+- 32 GB de RAM com GPU de 12 GB ou 16 GB; 48 GB de RAM se a GPU tiver apenas 8 GB de VRAM.
+- SSD/NVMe com 50 GB a 100 GB livres.
+
+Referencias: [LM Studio System Requirements](https://lmstudio.ai/docs/app/system-requirements) e [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4).
 
 ## Notas
 
