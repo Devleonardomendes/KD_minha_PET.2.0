@@ -42,7 +42,10 @@ Baixe o instalador Windows em [`downloads/KD_minha_PET.3.0_Setup.exe`](downloads
 - O botao `OK` so aparece quando o aplicativo termina de abrir o LM Studio, iniciar o servidor local e selecionar/carregar o ultimo modelo identificado.
 - O LM Studio roda localmente, em `http://127.0.0.1:1234`.
 - O aplicativo tenta usar um modelo ja carregado. Se nenhum modelo estiver carregado, usa o ultimo modelo local identificado pelo historico do LM Studio.
-- A IA nao substitui a varredura dos arquivos: primeiro o KD_minha_PET encontra candidatos locais, depois o LM Studio ajuda a expandir a consulta e reordenar os resultados.
+- No modo LM Studio, voce pode usar linguagem natural no campo de busca. O LM Studio interpreta a pergunta e gera termos juridicos relacionados antes da varredura local.
+- A IA nao substitui a leitura dos arquivos: depois da expansao da consulta, o KD_minha_PET procura nos nomes, caminhos e conteudo extraivel dos documentos; em seguida, o LM Studio pode reordenar os candidatos encontrados.
+- Para procurar uma frase literal, escreva a expressao entre aspas. Nesse caso, o KD_minha_PET prioriza a correspondencia local da expressao e evita que o reranking por IA rebaixe esse resultado.
+- No modo `Busca local com termos de pesquisa (nao usar o LM Studio)`, prefira palavras-chave objetivas, nomes de pecas, numeros de processo ou expressoes exatas.
 - Se o LM Studio falhar, a busca local continua disponivel.
 
 ## Observacoes sobre filtros
