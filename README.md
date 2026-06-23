@@ -99,21 +99,23 @@ Base de calculo:
 - O modelo local `google/gemma-4-12b-qat` medido no LM Studio ocupa 7,15 GB em disco.
 - A memoria de inferencia estimada para o modelo foi calculada como `7,15 GB x 1,25 = 8,94 GB`, arredondada para 9 GB em RAM+VRAM.
 - A integracao do KD_minha_PET carrega o modelo com contexto 8192; contextos maiores podem exigir mais memoria.
+- RAM e VRAM nao sao perfeitamente intercambiaveis. A coluna RAM+VRAM serve apenas como referencia de capacidade total disponivel; sem GPU dedicada, o modelo, o LM Studio, o Windows e o KD_minha_PET disputam a mesma RAM do sistema.
 
 Memoria RAM+VRAM por perfil:
 
-| Perfil da maquina | RAM minima calculada | Memoria total minima RAM+VRAM | RAM recomendada | Memoria total recomendada RAM+VRAM |
-|---|---:|---:|---:|---:|
-| Sem GPU dedicada | 32 GB | 32 GB | 48 GB | 48 GB |
-| GPU com 8 GB de VRAM | 24 GB | 32 GB | 48 GB | 56 GB |
-| GPU com 12 GB de VRAM | 24 GB | 36 GB | 32 GB | 44 GB |
-| GPU com 16 GB de VRAM | 16 GB | 32 GB | 32 GB | 48 GB |
+| Perfil da maquina | VRAM considerada | RAM minima calculada | Memoria total minima RAM+VRAM | RAM recomendada | Memoria total recomendada RAM+VRAM |
+|---|---:|---:|---:|---:|---:|
+| Sem GPU dedicada | 0 GB | 48 GB | 48 GB | 64 GB | 64 GB |
+| GPU com 8 GB de VRAM | 8 GB | 32 GB | 40 GB | 48 GB | 56 GB |
+| GPU com 12 GB de VRAM | 12 GB | 24 GB | 36 GB | 32 GB | 44 GB |
+| GPU com 16 GB de VRAM | 16 GB | 16 GB | 32 GB | 32 GB | 48 GB |
 
 Configuracao minima para LM Studio:
 
 - Windows 10 ou Windows 11, 64 bits.
 - CPU com AVX2.
-- 32 GB de memoria total RAM+VRAM.
+- Sem GPU dedicada: 48 GB de RAM.
+- Com GPU dedicada: pelo menos 32 GB de memoria total RAM+VRAM, respeitando a tabela acima.
 - SSD com 30 GB livres para aplicativo, modelo e arquivos temporarios.
 - Sem GPU dedicada, o uso e possivel, mas a inferencia sera feita em CPU/RAM e sera bem mais lenta.
 
@@ -122,7 +124,7 @@ Configuracao recomendada para LM Studio:
 - Windows 11, 64 bits.
 - CPU Intel i7/Ryzen 7 ou superior.
 - GPU dedicada com 12 GB ou 16 GB de VRAM.
-- 32 GB de RAM com GPU de 12 GB ou 16 GB; 48 GB de RAM se a GPU tiver apenas 8 GB de VRAM.
+- 32 GB de RAM com GPU de 12 GB ou 16 GB; 48 GB de RAM se a GPU tiver apenas 8 GB de VRAM; 64 GB de RAM se nao houver GPU dedicada.
 - SSD/NVMe com 50 GB a 100 GB livres.
 
 Referencias: [LM Studio System Requirements](https://lmstudio.ai/docs/app/system-requirements) e [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4).

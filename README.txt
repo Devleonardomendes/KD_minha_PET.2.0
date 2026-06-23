@@ -100,17 +100,19 @@ Base de calculo:
 - O modelo local google/gemma-4-12b-qat medido no LM Studio ocupa 7,15 GB em disco.
 - A memoria de inferencia estimada para o modelo foi calculada como 7,15 GB x 1,25 = 8,94 GB, arredondada para 9 GB em RAM+VRAM.
 - A integracao do KD_minha_PET carrega o modelo com contexto 8192; contextos maiores podem exigir mais memoria.
+- RAM e VRAM nao sao perfeitamente intercambiaveis. A memoria RAM+VRAM serve apenas como referencia de capacidade total disponivel; sem GPU dedicada, o modelo, o LM Studio, o Windows e o KD_minha_PET disputam a mesma RAM do sistema.
 
 Memoria RAM+VRAM por perfil:
-- Sem GPU dedicada: 32 GB de RAM minima; 48 GB de RAM recomendada.
-- GPU com 8 GB de VRAM: 24 GB de RAM minima, total 32 GB RAM+VRAM; 48 GB de RAM recomendada, total 56 GB RAM+VRAM.
+- Sem GPU dedicada: 48 GB de RAM minima, total 48 GB RAM+VRAM; 64 GB de RAM recomendada, total 64 GB RAM+VRAM.
+- GPU com 8 GB de VRAM: 32 GB de RAM minima, total 40 GB RAM+VRAM; 48 GB de RAM recomendada, total 56 GB RAM+VRAM.
 - GPU com 12 GB de VRAM: 24 GB de RAM minima, total 36 GB RAM+VRAM; 32 GB de RAM recomendada, total 44 GB RAM+VRAM.
 - GPU com 16 GB de VRAM: 16 GB de RAM minima, total 32 GB RAM+VRAM; 32 GB de RAM recomendada, total 48 GB RAM+VRAM.
 
 Configuracao minima para LM Studio:
 - Windows 10 ou Windows 11, 64 bits.
 - CPU com AVX2.
-- 32 GB de memoria total RAM+VRAM.
+- Sem GPU dedicada: 48 GB de RAM.
+- Com GPU dedicada: pelo menos 32 GB de memoria total RAM+VRAM, respeitando a tabela acima.
 - SSD com 30 GB livres para aplicativo, modelo e arquivos temporarios.
 - Sem GPU dedicada, o uso e possivel, mas a inferencia sera feita em CPU/RAM e sera bem mais lenta.
 
@@ -118,7 +120,7 @@ Configuracao recomendada para LM Studio:
 - Windows 11, 64 bits.
 - CPU Intel i7/Ryzen 7 ou superior.
 - GPU dedicada com 12 GB ou 16 GB de VRAM.
-- 32 GB de RAM com GPU de 12 GB ou 16 GB; 48 GB de RAM se a GPU tiver apenas 8 GB de VRAM.
+- 32 GB de RAM com GPU de 12 GB ou 16 GB; 48 GB de RAM se a GPU tiver apenas 8 GB de VRAM; 64 GB de RAM se nao houver GPU dedicada.
 - SSD/NVMe com 50 GB a 100 GB livres.
 
 Referencias:
