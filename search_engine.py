@@ -30,7 +30,7 @@ except Exception:  # pragma: no cover - optional runtime dependency.
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 
-APP_NAME = "KD_minha_PET.2.0"
+APP_NAME = "KD_minha_PET 3.0"
 CREATOR = "LEONARDO CARDOSO DE MELO TEIXEIRA MENDES"
 
 MAX_TEXT_BYTES = 1_500_000
@@ -116,6 +116,10 @@ STOP_WORDS = {
     "busca",
     "com",
     "como",
+    "contem",
+    "conter",
+    "contendo",
+    "contenha",
     "da",
     "das",
     "de",
@@ -127,11 +131,15 @@ STOP_WORDS = {
     "em",
     "encontre",
     "encontrar",
+    "estou",
     "esse",
     "essa",
     "este",
     "esta",
     "eu",
+    "express",
+    "expressao",
+    "expressoes",
     "fazer",
     "localizar",
     "me",
@@ -148,6 +156,8 @@ STOP_WORDS = {
     "pela",
     "pelo",
     "por",
+    "precisa",
+    "precisando",
     "preciso",
     "procurar",
     "quero",
@@ -200,6 +210,7 @@ class SearchIntent:
     normalized_query: str
     terms: tuple[str, ...]
     extensions: frozenset[str]
+    quoted_phrases: tuple[str, ...] = ()
     date_from: datetime | None = None
     date_to: datetime | None = None
     document_type: str = DOCUMENT_TYPE_ALL_KEY
@@ -312,6 +323,7 @@ def _year_range_to_dates(
 def parse_query(query: str) -> SearchIntent:
     normalized = normalize_text(query)
     tokens = normalized.split()
+    quoted_phrases = _extract_quoted_phrases(query)
 
     extensions: set[str] = set()
     type_tokens: set[str] = set()
@@ -331,10 +343,22 @@ def parse_query(query: str) -> SearchIntent:
         original_query=query.strip(),
         normalized_query=normalized,
         terms=terms,
+        quoted_phrases=quoted_phrases,
         extensions=frozenset(extensions),
         date_from=date_from,
         date_to=date_to,
     )
+
+
+def _extract_quoted_phrases(query: str) -> tuple[str, ...]:
+    phrases: list[str] = []
+    for match in re.finditer(r'"([^"]+)"|“([^”]+)”|‘([^’]+)’', query or ""):
+        raw = next((group for group in match.groups() if group), "")
+        phrase = normalize_text(raw)
+        phrase_terms = [token for token in phrase.split() if token not in STOP_WORDS]
+        if len(phrase_terms) >= 2:
+            phrases.append(" ".join(phrase_terms))
+    return tuple(_dedupe(phrases))
 
 
 def smart_search(
@@ -923,6 +947,7 @@ def _evaluate_candidate(
     score = 0.0
     matched_terms: set[str] = set()
     reasons: list[str] = []
+    phrase_matched = False
 
     if intent.extensions:
         score += 12
@@ -950,6 +975,38 @@ def _evaluate_candidate(
                 snippet=snippet,
             )
         return _empty_result(path, modified, size)
+
+    for quoted_phrase in intent.quoted_phrases:
+        phrase_terms = _phrase_terms(quoted_phrase)
+        if not phrase_terms:
+            continue
+
+        if quoted_phrase in name_norm:
+            score += 150
+            matched_terms.update(phrase_terms)
+            reasons.append("expressao entre aspas no nome")
+            phrase_matched = True
+            continue
+
+        if quoted_phrase in path_norm:
+            score += 130
+            matched_terms.update(phrase_terms)
+            reasons.append("expressao entre aspas no caminho")
+            phrase_matched = True
+            continue
+
+        if content_norm and quoted_phrase in content_norm:
+            score += 170
+            matched_terms.update(phrase_terms)
+            reasons.append("expressao entre aspas no conteudo")
+            phrase_matched = True
+            continue
+
+        if content_norm and _ordered_terms_are_near(content_norm, phrase_terms):
+            score += 135
+            matched_terms.update(phrase_terms)
+            reasons.append("termos da expressao entre aspas proximos no conteudo")
+            phrase_matched = True
 
     phrase = " ".join(intent.terms)
     if phrase and phrase in name_norm:
@@ -987,10 +1044,10 @@ def _evaluate_candidate(
             reasons.append(f"conteudo: {term}")
 
     coverage = len(matched_terms) / max(len(intent.terms), 1)
-    if coverage == 0:
+    if coverage == 0 and not phrase_matched:
         return _empty_result(path, modified, size)
 
-    if coverage < 0.5 and score < 32:
+    if coverage < 0.5 and score < 32 and not phrase_matched:
         return _empty_result(path, modified, size)
 
     score += coverage * 22
@@ -1260,6 +1317,42 @@ def _strip_rtf(text: str) -> str:
 def _compact_text(text: str) -> str:
     text = text.replace("\x00", " ")
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _phrase_terms(phrase: str) -> list[str]:
+    return [
+        term
+        for term in phrase.split()
+        if term not in STOP_WORDS and (len(term) > 1 or term.isdigit())
+    ]
+
+
+def _ordered_terms_are_near(content_norm: str, terms: list[str]) -> bool:
+    if len(terms) < 2:
+        return False
+
+    max_words = max(len(terms) + 12, len(terms) * 4)
+    start = content_norm.find(terms[0])
+    attempts = 0
+    while start >= 0 and attempts < 250:
+        attempts += 1
+        search_from = start + len(terms[0])
+        last_end = search_from
+
+        for term in terms[1:]:
+            index = content_norm.find(term, search_from)
+            if index < 0:
+                return False
+            last_end = index + len(term)
+            search_from = last_end
+
+        window = content_norm[start:last_end]
+        if len(window.split()) <= max_words:
+            return True
+
+        start = content_norm.find(terms[0], start + 1)
+
+    return False
 
 
 def _fuzzy_word_match(term: str, words: list[str]) -> bool:

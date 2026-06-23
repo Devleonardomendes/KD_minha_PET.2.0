@@ -4,15 +4,15 @@ $InstallerDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $InstallerDir
 $BuildTools = "S:\Backup da Pasta Trabalho\Resumator 5.1 - Enhanced\build-tools"
 $DistDir = Join-Path $ProjectDir "dist"
-$AppDir = Join-Path $DistDir "KD_minha_PET.2.0"
+$AppDir = Join-Path $DistDir "KD_minha_PET.3.0"
 $PayloadDir = Join-Path $InstallerDir "payload"
-$PayloadZip = Join-Path $PayloadDir "KDMinhaPET20-app.zip"
+$PayloadZip = Join-Path $PayloadDir "KDMinhaPET30-app.zip"
 $SetupSpec = Join-Path $ProjectDir "build-spec\KD_minha_PET Setup.spec"
 $BuildDir = Join-Path $ProjectDir "build-setup"
 $PreferredPython = "C:\Users\Leonardo\AppData\Local\Programs\Python\Python314\python.exe"
 $PythonExe = if (Test-Path $PreferredPython) { $PreferredPython } else { "python" }
 
-if (-not (Test-Path (Join-Path $AppDir "KD_minha_PET.2.0.exe"))) {
+if (-not (Test-Path (Join-Path $AppDir "KD_minha_PET.3.0.exe"))) {
     throw "Aplicativo nao encontrado em $AppDir. Gere o app principal antes do instalador."
 }
 
@@ -38,7 +38,7 @@ finally {
     Pop-Location
 }
 
-$SetupExe = Join-Path $DistDir "KD_minha_PET.2.0 Setup.exe"
+$SetupExe = Join-Path $DistDir "KD_minha_PET.3.0 Setup.exe"
 if (-not (Test-Path $SetupExe)) {
     throw "Instalador nao gerado em $SetupExe"
 }

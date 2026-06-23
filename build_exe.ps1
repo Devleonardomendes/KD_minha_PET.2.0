@@ -7,6 +7,7 @@ $IconPath = Join-Path $ProjectDir "assets\lupa.ico"
 $OcrScriptPath = Join-Path $ProjectDir "tools\ocr_windows.ps1"
 $AppPath = Join-Path $ProjectDir "app.py"
 $SearchEnginePath = Join-Path $ProjectDir "search_engine.py"
+$LmStudioIntegrationPath = Join-Path $ProjectDir "lm_studio_integration.py"
 $SitecustomizePath = Join-Path $ProjectDir "sitecustomize.py"
 $BuildScriptPath = Join-Path $ProjectDir "build_exe.ps1"
 $ShortcutScriptPath = Join-Path $ProjectDir "create_desktop_shortcut.ps1"
@@ -41,7 +42,7 @@ $env:PATH = "$BuildTools\bin;$env:PATH"
     --noconfirm `
     --clean `
     --windowed `
-    --name "KD_minha_PET.2.0" `
+    --name "KD_minha_PET.3.0" `
     --icon "$IconPath" `
     --add-data "$IconPath;assets" `
     --add-data "$OcrScriptPath;tools" `
@@ -49,6 +50,7 @@ $env:PATH = "$BuildTools\bin;$env:PATH"
     --add-data "$ReadmeMarkdownPath;." `
     --add-data "$AppPath;source" `
     --add-data "$SearchEnginePath;source" `
+    --add-data "$LmStudioIntegrationPath;source" `
     --add-data "$SitecustomizePath;source" `
     --add-data "$BuildScriptPath;source" `
     --add-data "$ShortcutScriptPath;source" `
@@ -63,7 +65,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "PyInstaller falhou ao gerar o aplicativo."
 }
 
-$DistAppDir = Join-Path $ProjectDir "dist\KD_minha_PET.2.0"
+$DistAppDir = Join-Path $ProjectDir "dist\KD_minha_PET.3.0"
 $DistInternalDir = Join-Path $DistAppDir "_internal"
 $TkRuntimeItems = @("_tcl_data", "_tk_data", "tcl8", "_tkinter.pyd", "tcl86t.dll", "tk86t.dll", "zlib1.dll")
 foreach ($Item in $TkRuntimeItems) {
@@ -93,6 +95,7 @@ New-Item -ItemType Directory -Force -Path $SourceDistDir | Out-Null
 $SourceFiles = @(
     @{ Source = $AppPath; Target = "app.py" },
     @{ Source = $SearchEnginePath; Target = "search_engine.py" },
+    @{ Source = $LmStudioIntegrationPath; Target = "lm_studio_integration.py" },
     @{ Source = $SitecustomizePath; Target = "sitecustomize.py" },
     @{ Source = $BuildScriptPath; Target = "build_exe.ps1" },
     @{ Source = $ShortcutScriptPath; Target = "create_desktop_shortcut.ps1" },

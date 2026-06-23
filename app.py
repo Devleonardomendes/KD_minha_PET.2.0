@@ -10,6 +10,12 @@ import sys
 import tempfile
 import threading
 
+from lm_studio_integration import (
+    LMStudioError,
+    LMStudioSession,
+    lm_studio_semantic_search,
+    prepare_lm_studio,
+)
 from search_engine import (
     APP_NAME,
     CREATOR,
@@ -28,6 +34,7 @@ _TCL_DLL = None
 SOURCE_FILES = (
     ("Aplicativo", "app.py"),
     ("Busca", "search_engine.py"),
+    ("LM Studio", "lm_studio_integration.py"),
     ("Inicializacao", "sitecustomize.py"),
     ("OCR Windows", "tools/ocr_windows.ps1"),
     ("Empacotamento", "build_exe.ps1"),
@@ -157,6 +164,7 @@ class KDMinhaPetApp(tk.Tk):
 
         self.query_var = tk.StringVar()
         self.folder_var = tk.StringVar()
+        self.search_mode_var = tk.StringVar(value="local")
         self.include_content_var = tk.BooleanVar(value=True)
         self.pdf_ocr_var = tk.BooleanVar(value=True)
         self.skip_technical_var = tk.BooleanVar(value=True)
@@ -175,6 +183,7 @@ class KDMinhaPetApp(tk.Tk):
         self.worker: threading.Thread | None = None
         self.results_by_iid: dict[str, SearchResult] = {}
         self.log_entries: list[str] = []
+        self.lm_studio_session: LMStudioSession | None = None
         self._last_cpu_times = self._read_cpu_times()
 
         self._configure_style()
@@ -223,10 +232,28 @@ class KDMinhaPetApp(tk.Tk):
         controls = ttk.Frame(self, padding=(18, 14, 18, 10))
         controls.grid(row=1, column=0, sticky="nsew")
         controls.columnconfigure(0, weight=1)
-        controls.rowconfigure(5, weight=1)
+        controls.rowconfigure(6, weight=1)
+
+        mode_row = ttk.Frame(controls)
+        mode_row.grid(row=0, column=0, sticky="ew")
+        ttk.Label(mode_row, text="Modo").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ttk.Radiobutton(
+            mode_row,
+            text="Usar o LM Studio para Busca com Linguagem Natural",
+            variable=self.search_mode_var,
+            value="lmstudio",
+            command=self.on_search_mode_changed,
+        ).grid(row=0, column=1, sticky="w", padx=(0, 18))
+        ttk.Radiobutton(
+            mode_row,
+            text="Busca local com termos de pesquisa (não usar o LM Studio)",
+            variable=self.search_mode_var,
+            value="local",
+            command=self.on_search_mode_changed,
+        ).grid(row=0, column=2, sticky="w")
 
         query_row = ttk.Frame(controls)
-        query_row.grid(row=0, column=0, sticky="ew")
+        query_row.grid(row=1, column=0, sticky="ew", pady=(10, 0))
         query_row.columnconfigure(1, weight=1)
 
         ttk.Label(query_row, text="Buscar").grid(row=0, column=0, sticky="w", padx=(0, 8))
@@ -243,7 +270,7 @@ class KDMinhaPetApp(tk.Tk):
         self.stop_button.grid(row=0, column=3, padx=(8, 0))
 
         folder_row = ttk.Frame(controls)
-        folder_row.grid(row=1, column=0, sticky="ew", pady=(10, 0))
+        folder_row.grid(row=2, column=0, sticky="ew", pady=(10, 0))
         folder_row.columnconfigure(1, weight=1)
 
         ttk.Label(folder_row, text="Pasta").grid(row=0, column=0, sticky="w", padx=(0, 8))
@@ -256,7 +283,7 @@ class KDMinhaPetApp(tk.Tk):
         )
 
         filter_row = ttk.Frame(controls)
-        filter_row.grid(row=2, column=0, sticky="ew", pady=(10, 4))
+        filter_row.grid(row=3, column=0, sticky="ew", pady=(10, 4))
 
         ttk.Label(filter_row, text="Resultados").grid(row=0, column=0, sticky="w", padx=(0, 8))
         self.max_results_combo = ttk.Combobox(
@@ -292,7 +319,7 @@ class KDMinhaPetApp(tk.Tk):
         self.document_type_combo.grid(row=0, column=7, sticky="w")
 
         options_row = ttk.Frame(controls)
-        options_row.grid(row=3, column=0, sticky="ew", pady=(6, 4))
+        options_row.grid(row=4, column=0, sticky="ew", pady=(6, 4))
         ttk.Checkbutton(
             options_row,
             text="Ler conteudo quando possivel",
@@ -315,7 +342,7 @@ class KDMinhaPetApp(tk.Tk):
         ).grid(row=0, column=3, sticky="w", padx=(18, 0))
 
         action_row = ttk.Frame(controls)
-        action_row.grid(row=4, column=0, sticky="ew", pady=(4, 8))
+        action_row.grid(row=5, column=0, sticky="ew", pady=(4, 8))
         ttk.Button(action_row, text="Abrir arquivo", command=self.open_selected_file).grid(
             row=0,
             column=0,
@@ -348,7 +375,7 @@ class KDMinhaPetApp(tk.Tk):
         )
 
         content = ttk.PanedWindow(controls, orient=tk.VERTICAL)
-        content.grid(row=5, column=0, sticky="nsew")
+        content.grid(row=6, column=0, sticky="nsew")
 
         table_frame = ttk.Frame(content)
         table_frame.columnconfigure(0, weight=1)
@@ -422,6 +449,123 @@ class KDMinhaPetApp(tk.Tk):
         self.tree.bind("<Double-1>", lambda _event: self.open_selected_file())
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+    def on_search_mode_changed(self) -> None:
+        if self.search_mode_var.get() == "lmstudio":
+            if self.ensure_lm_studio_ready():
+                self.status_var.set("LM Studio pronto para busca em linguagem natural.")
+            else:
+                self.search_mode_var.set("local")
+                self.status_var.set("Busca local selecionada.")
+        else:
+            self.status_var.set("Busca local selecionada.")
+
+    def ensure_lm_studio_ready(self) -> bool:
+        if self.lm_studio_session is not None:
+            return True
+
+        dialog = tk.Toplevel(self)
+        dialog.title(f"{APP_NAME} - LM Studio")
+        dialog.geometry("560x220")
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        dialog.columnconfigure(0, weight=1)
+        frame = ttk.Frame(dialog, padding=(18, 18, 18, 14))
+        frame.grid(row=0, column=0, sticky="nsew")
+        frame.columnconfigure(0, weight=1)
+
+        ttk.Label(
+            frame,
+            text="Aguarde a abertura do LM Studio e seleção de modelo.",
+            font=("Segoe UI", 11, "bold"),
+            wraplength=500,
+        ).grid(row=0, column=0, sticky="w")
+
+        status_var = tk.StringVar(value="Iniciando preparação...")
+        ttk.Label(frame, textvariable=status_var, wraplength=500).grid(
+            row=1,
+            column=0,
+            sticky="ew",
+            pady=(14, 8),
+        )
+
+        progress = ttk.Progressbar(frame, mode="indeterminate")
+        progress.grid(row=2, column=0, sticky="ew")
+        progress.start(10)
+
+        button_row = ttk.Frame(frame)
+        button_row.grid(row=3, column=0, sticky="e", pady=(18, 0))
+
+        dialog_queue: queue.Queue[tuple[str, object]] = queue.Queue()
+        result: dict[str, bool] = {"ready": False}
+
+        def log_from_worker(message: str) -> None:
+            dialog_queue.put(("log", message))
+
+        def worker() -> None:
+            try:
+                session = prepare_lm_studio(log=log_from_worker)
+                dialog_queue.put(("done", session))
+            except Exception as exc:
+                dialog_queue.put(("error", str(exc)))
+
+        def close_success() -> None:
+            result["ready"] = True
+            dialog.grab_release()
+            dialog.destroy()
+
+        def close_failure() -> None:
+            result["ready"] = False
+            dialog.grab_release()
+            dialog.destroy()
+
+        def poll_dialog_queue() -> None:
+            try:
+                while True:
+                    kind, payload = dialog_queue.get_nowait()
+                    if kind == "log":
+                        message = str(payload)
+                        status_var.set(message)
+                        self._log_event(f"LM Studio: {message}")
+                    elif kind == "done":
+                        self.lm_studio_session = payload  # type: ignore[assignment]
+                        progress.stop()
+                        session = self.lm_studio_session
+                        status_var.set(
+                            f"LM Studio pronto. Modelo selecionado: {session.display_name}"
+                        )
+                        ttk.Button(button_row, text="OK", command=close_success).grid(
+                            row=0,
+                            column=0,
+                        )
+                    elif kind == "error":
+                        progress.stop()
+                        self._log_event(f"Falha ao preparar LM Studio: {payload}")
+                        status_var.set(
+                            "Nao foi possivel preparar o LM Studio. "
+                            "A busca local sera mantida.\n"
+                            f"Detalhe: {payload}"
+                        )
+                        ttk.Button(button_row, text="Fechar", command=close_failure).grid(
+                            row=0,
+                            column=0,
+                        )
+            except queue.Empty:
+                pass
+            try:
+                exists = bool(dialog.winfo_exists())
+            except tk.TclError:
+                exists = False
+            if exists:
+                dialog.after(150, poll_dialog_queue)
+
+        threading.Thread(target=worker, daemon=True).start()
+        dialog.after(150, poll_dialog_queue)
+        self.wait_window(dialog)
+        return result["ready"]
+
     def select_folder(self) -> None:
         initial_dir = self.folder_var.get().strip() or str(Path.home())
         folder = filedialog.askdirectory(title="Escolha a pasta", initialdir=initial_dir)
@@ -492,6 +636,13 @@ class KDMinhaPetApp(tk.Tk):
         pdf_ocr = self.pdf_ocr_var.get()
         skip_technical_dirs = self.skip_technical_var.get()
         use_windows_search = self.use_windows_search_var.get()
+        search_mode = self.search_mode_var.get()
+        if search_mode == "lmstudio" and self.lm_studio_session is None:
+            if not self.ensure_lm_studio_ready():
+                self.search_mode_var.set("local")
+                return
+
+        lm_studio_session = self.lm_studio_session
 
         self._clear_results()
         self._set_busy(True)
@@ -502,6 +653,7 @@ class KDMinhaPetApp(tk.Tk):
             f"termo={query!r} | pasta={str(root)!r} | resultados={max_results} | "
             f"ano_inicial={year_start or '-'} | ano_final={year_end or '-'} | "
             f"tipo_documento={document_type_label!r} | "
+            f"modo={'LM Studio' if search_mode == 'lmstudio' else 'local'} | "
             f"windows_search={'sim' if use_windows_search else 'nao'} | "
             f"conteudo={'sim' if include_content else 'nao'} | "
             f"ocr={'sim' if pdf_ocr else 'nao'} | "
@@ -510,23 +662,45 @@ class KDMinhaPetApp(tk.Tk):
 
         def worker_run() -> None:
             try:
-                response = smart_search(
-                    query,
-                    root,
-                    include_content=include_content,
-                    pdf_ocr=pdf_ocr,
-                    skip_technical_dirs=skip_technical_dirs,
-                    max_results=max_results,
-                    year_start=year_start,
-                    year_end=year_end,
-                    document_type=document_type_key,
-                    use_windows_search=use_windows_search,
-                    progress=lambda scanned, matched, current: self.worker_queue.put(
-                        ("progress", (scanned, matched, current))
-                    ),
-                    log=lambda message: self.worker_queue.put(("log", message)),
-                    stop_event=self.stop_event,
-                )
+                if search_mode == "lmstudio":
+                    if lm_studio_session is None:
+                        raise LMStudioError("LM Studio nao esta preparado.")
+                    response = lm_studio_semantic_search(
+                        query,
+                        root,
+                        session=lm_studio_session,
+                        include_content=include_content,
+                        pdf_ocr=pdf_ocr,
+                        skip_technical_dirs=skip_technical_dirs,
+                        max_results=max_results,
+                        year_start=year_start,
+                        year_end=year_end,
+                        document_type=document_type_key,
+                        use_windows_search=use_windows_search,
+                        progress=lambda scanned, matched, current: self.worker_queue.put(
+                            ("progress", (scanned, matched, current))
+                        ),
+                        log=lambda message: self.worker_queue.put(("log", message)),
+                        stop_event=self.stop_event,
+                    )
+                else:
+                    response = smart_search(
+                        query,
+                        root,
+                        include_content=include_content,
+                        pdf_ocr=pdf_ocr,
+                        skip_technical_dirs=skip_technical_dirs,
+                        max_results=max_results,
+                        year_start=year_start,
+                        year_end=year_end,
+                        document_type=document_type_key,
+                        use_windows_search=use_windows_search,
+                        progress=lambda scanned, matched, current: self.worker_queue.put(
+                            ("progress", (scanned, matched, current))
+                        ),
+                        log=lambda message: self.worker_queue.put(("log", message)),
+                        stop_event=self.stop_event,
+                    )
                 self.worker_queue.put(("done", response))
             except Exception as exc:  # pragma: no cover - shown to the user.
                 self.worker_queue.put(("error", str(exc)))
@@ -704,10 +878,13 @@ class KDMinhaPetApp(tk.Tk):
             f"- Ano inicial: {self.year_start_var.get().strip() or '-'}",
             f"- Ano final: {self.year_end_var.get().strip() or '-'}",
             f"- Tipo de documento: {self.document_type_var.get().strip() or '-'}",
+            f"- Modo de busca: {'LM Studio' if self.search_mode_var.get() == 'lmstudio' else 'local'}",
+            f"- Modelo LM Studio: {self.lm_studio_session.display_name if self.lm_studio_session else '-'}",
             f"- Windows Search: {'sim' if self.use_windows_search_var.get() else 'nao'}",
             f"- Ler conteudo: {'sim' if self.include_content_var.get() else 'nao'}",
             f"- OCR em PDFs: {'sim' if self.pdf_ocr_var.get() else 'nao'}",
             f"- Ignorar pastas tecnicas: {'sim' if self.skip_technical_var.get() else 'nao'}",
+            f"- Busca em andamento: {'sim' if self.worker and self.worker.is_alive() else 'nao'}",
             f"- {self.cpu_var.get()}",
             "",
             "Eventos:",
@@ -987,7 +1164,7 @@ def main() -> None:
 def self_test() -> int:
     from PIL import Image, ImageDraw, ImageFont
 
-    test_dir = Path(tempfile.gettempdir()) / "KD_minha_PET.2.0_self_test"
+    test_dir = Path(tempfile.gettempdir()) / "KD_minha_PET.3.0_self_test"
     test_dir.mkdir(parents=True, exist_ok=True)
     sample = test_dir / "peticao_teste_prescricao.txt"
     sample.write_text("Modelo de peticao sobre prescricao intercorrente.", encoding="utf-8")

@@ -1,4 +1,4 @@
-KD_minha_PET.2.0
+KD_minha_PET 3.0
 ================
 
 Aplicativo Windows de busca local de peticoes e documentos juridicos.
@@ -19,21 +19,35 @@ Principais recursos
   - Agravo de instrumento
   - Todos os documentos
 - Opcao para aproveitar o indice do Windows Search quando disponivel, com fallback automatico para a busca interna.
+- Modo "Usar o LM Studio para Busca com Linguagem Natural", usando modelo local do LM Studio para expandir a consulta e reordenar os candidatos encontrados.
+- Modo "Busca local com termos de pesquisa (nao usar o LM Studio)" para manter a busca tradicional.
 - Botao "Exportar logs", disponivel mesmo quando nao houve erro.
 - Botao "README" para consultar estas instrucoes dentro do proprio aplicativo.
 - Barra de status com andamento da busca e percentuais aproximados de uso geral da CPU e da memoria RAM.
 
 Como usar
 ---------
-1. Abra o KD_minha_PET.2.0.
+1. Abra o KD_minha_PET 3.0.
 2. Escolha a pasta em que os documentos serao pesquisados.
-3. Digite os termos da busca.
-4. Escolha quantos resultados deseja exibir.
-5. Preencha "Ano inicial" e/ou "Ano final" se quiser restringir por ano de modificacao do arquivo.
-6. Escolha o tipo de documento, se quiser restringir pelo nome da peca exibido na primeira pagina.
-7. Marque "Usar indice do Windows Search quando disponivel" se quiser tentar acelerar a busca com o indice do Windows.
-8. Clique em "Buscar".
-9. Use "README" para abrir estas instrucoes dentro do aplicativo.
+3. Escolha o modo de busca:
+   - "Usar o LM Studio para Busca com Linguagem Natural"
+   - "Busca local com termos de pesquisa (nao usar o LM Studio)"
+4. Digite os termos ou a pergunta da busca.
+5. Escolha quantos resultados deseja exibir.
+6. Preencha "Ano inicial" e/ou "Ano final" se quiser restringir por ano de modificacao do arquivo.
+7. Escolha o tipo de documento, se quiser restringir pelo nome da peca exibido na primeira pagina.
+8. Marque "Usar indice do Windows Search quando disponivel" se quiser tentar acelerar a busca com o indice do Windows.
+9. Clique em "Buscar".
+10. Use "README" para abrir estas instrucoes dentro do aplicativo.
+
+Modo LM Studio
+--------------
+- Ao selecionar "Usar o LM Studio para Busca com Linguagem Natural", o aplicativo abre uma tela com o aviso "Aguarde a abertura do LM Studio e selecao de modelo".
+- O botao "OK" so aparece quando o aplicativo termina de abrir o LM Studio, iniciar o servidor local e selecionar/carregar o ultimo modelo identificado.
+- O LM Studio roda localmente, em http://127.0.0.1:1234.
+- O aplicativo tenta usar um modelo ja carregado. Se nenhum modelo estiver carregado, usa o ultimo modelo local identificado pelo historico do LM Studio.
+- A IA nao substitui a varredura dos arquivos: primeiro o KD_minha_PET encontra candidatos locais, depois o LM Studio ajuda a expandir a consulta e reordenar os resultados.
+- Se o LM Studio falhar, a busca local continua disponivel.
 
 Observacoes sobre filtros
 -------------------------
@@ -53,8 +67,8 @@ Use "Exportar logs" para salvar:
 
 Empacotamento
 -------------
-- O executavel principal gerado deve se chamar KD_minha_PET.2.0.exe.
-- O instalador gerado deve se chamar KD_minha_PET.2.0 Setup.exe.
+- O executavel principal gerado deve se chamar KD_minha_PET.3.0.exe.
+- O instalador gerado deve se chamar KD_minha_PET.3.0 Setup.exe.
 - O script principal de build e build_exe.ps1.
 - O script de instalador e installer/build_setup.ps1.
 
@@ -64,7 +78,7 @@ Requisitos recomendados
 - SSD.
 - 16 GB de RAM ou mais.
 - Para uso intensivo com PDFs grandes ou escaneados, recomenda-se 32 GB de RAM e CPU Intel Core i7/Ryzen 7 ou superior.
-- a utilização desta ferramenta por usuários equipados com Intel i5 ou Ryzen 5 ou Memória RAM de 8Gb deverá ser realizada com cautela, limitando a busca a pastas com poucos arquivos. Este app não é recomendado para Setups inferiores às especificações mínimas
+- A utilizacao desta ferramenta por usuarios equipados com Intel i5 ou Ryzen 5 ou memoria RAM de 8 GB deve ser realizada com cautela, limitando a busca a pastas com poucos arquivos. Este app nao e recomendado para setups inferiores as especificacoes minimas.
 
 Notas
 -----

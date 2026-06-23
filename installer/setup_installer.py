@@ -11,13 +11,13 @@ import winreg
 import zipfile
 
 
-APP_NAME = "KD_minha_PET.2.0"
-APP_VERSION = "2.0"
+APP_NAME = "KD_minha_PET.3.0"
+APP_VERSION = "3.0"
 PUBLISHER = "LEONARDO CARDOSO DE MELO TEIXEIRA MENDES"
-INSTALLED_EXE = "KD_minha_PET.2.0.exe"
-PAYLOAD_APP_ZIP = "KDMinhaPET20-app.zip"
+INSTALLED_EXE = "KD_minha_PET.3.0.exe"
+PAYLOAD_APP_ZIP = "KDMinhaPET30-app.zip"
 PAYLOAD_README = "README.txt"
-UNINSTALL_SCRIPT = "uninstall_kd_minha_pet_2_0.ps1"
+UNINSTALL_SCRIPT = "uninstall_kd_minha_pet_3_0.ps1"
 UNINSTALL_REG_PATH = rf"Software\Microsoft\Windows\CurrentVersion\Uninstall\{APP_NAME}"
 
 
@@ -43,7 +43,7 @@ def _ps_quote(value: str) -> str:
 def _create_shortcuts(target: Path) -> None:
     target_text = _ps_quote(str(target))
     shortcut_name = _ps_quote(f"{APP_NAME}.lnk")
-    description = _ps_quote("KD_minha_PET.2.0 - busca local de arquivos")
+    description = _ps_quote("KD_minha_PET.3.0 - busca local de arquivos")
     command = (
         "$desktop=[Environment]::GetFolderPath('Desktop'); "
         "$programs=[Environment]::GetFolderPath('Programs'); "
@@ -87,7 +87,7 @@ def _estimated_size_kb(path: Path) -> int:
 
 def _create_uninstaller(destination_dir: Path) -> Path:
     uninstaller = destination_dir / UNINSTALL_SCRIPT
-    cleanup_name = "kd-minha-pet-2.0-cleanup.cmd"
+    cleanup_name = "kd-minha-pet-3.0-cleanup.cmd"
     script = f"""$ErrorActionPreference = 'SilentlyContinue'
 $appName = {_ps_quote(APP_NAME)}
 $installDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -192,7 +192,7 @@ def main() -> int:
 
 def self_test() -> int:
     source = _resource_path(PAYLOAD_APP_ZIP)
-    output_dir = Path(tempfile.gettempdir()) / "kd-minha-pet-2.0-setup-self-test"
+    output_dir = Path(tempfile.gettempdir()) / "kd-minha-pet-3.0-setup-self-test"
     output_dir.mkdir(parents=True, exist_ok=True)
     diagnostic = output_dir / "diagnostic.txt"
     diagnostic.write_text(
@@ -213,7 +213,11 @@ def self_test() -> int:
         if "README.txt" not in names:
             diagnostic.write_text("missing=README.txt\n", encoding="utf-8")
             return 5
-        if "source/app.py" not in names or "source/search_engine.py" not in names:
+        if (
+            "source/app.py" not in names
+            or "source/search_engine.py" not in names
+            or "source/lm_studio_integration.py" not in names
+        ):
             diagnostic.write_text("missing=source_files\n", encoding="utf-8")
             return 6
         archive.extractall(output_dir / "app")
