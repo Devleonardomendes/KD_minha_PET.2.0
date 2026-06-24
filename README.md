@@ -8,6 +8,8 @@ DESENVOLVEDOR: LEONARDO CARDOSO DE MELO TEIXEIRA MENDES - PROCURADOR FEDERAL / A
 
 Baixe o instalador Windows em [`downloads/KD_minha_PET.3.0_Setup.exe`](downloads/KD_minha_PET.3.0_Setup.exe).
 
+Tutorial de excecao no Windows: [`TUTORIAL_EXCECAO_FIREWALL_WINDOWS.txt`](TUTORIAL_EXCECAO_FIREWALL_WINDOWS.txt).
+
 ## Instalacao e desinstalacao
 
 - Execute `KD_minha_PET.3.0_Setup.exe` para instalar o aplicativo no computador.

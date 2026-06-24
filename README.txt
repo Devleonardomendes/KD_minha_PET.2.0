@@ -5,6 +5,11 @@ Aplicativo Windows de busca local de peticoes e documentos juridicos.
 
 DESENVOLVEDOR: LEONARDO CARDOSO DE MELO TEIXEIRA MENDES - PROCURADOR FEDERAL / AGU
 
+Download
+--------
+- Baixe o instalador Windows em downloads\KD_minha_PET.3.0_Setup.exe.
+- Tutorial de excecao no Windows: TUTORIAL_EXCECAO_FIREWALL_WINDOWS.txt.
+
 Instalacao e desinstalacao
 --------------------------
 - Execute KD_minha_PET.3.0_Setup.exe para instalar o aplicativo no computador.
