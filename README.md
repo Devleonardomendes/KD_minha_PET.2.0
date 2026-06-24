@@ -23,7 +23,7 @@ Tutorial de excecao no Windows: [`TUTORIAL_EXCECAO_FIREWALL_WINDOWS.txt`](TUTORI
 - OCR opcional para PDFs escaneados, usando recursos disponiveis no Windows.
 - Seletor de quantidade de resultados exibidos: apenas os mais relevantes sao mostrados.
 - Filtro por ano inicial e ano final, com suporte a um unico ano quando os dois campos sao iguais.
-- Filtro por tipo de documento identificado no texto inicial/primeira pagina: Contestacao, Apelacao, Contrarrazoes/Contra-Razoes, Agravo de instrumento ou todos os documentos.
+- Filtro por tipo de documento identificado no texto inicial/primeira pagina: Contestacao, Apelacao, Contrarrazoes/Contra-Razoes, Impugnacao, Agravo de instrumento ou todos os documentos.
 - Opcao para aproveitar o indice do Windows Search quando disponivel, com fallback automatico para a busca interna.
 - Modo `Usar o LM Studio para Busca com Linguagem Natural`, usando modelo local do LM Studio para expandir a consulta e reordenar os candidatos encontrados.
 - Modo `Busca local com termos de pesquisa (nao usar o LM Studio)` para manter a busca tradicional.

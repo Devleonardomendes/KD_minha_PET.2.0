@@ -50,6 +50,7 @@ DOCUMENT_TYPE_LABELS = {
     "contestacao": "Contestação",
     "apelacao": "Apelação",
     "contrarrazoes": "Contrarrazões",
+    "impugnacao": "Impugnação",
     "agravo_instrumento": "Agravo de instrumento",
 }
 DOCUMENT_TYPE_CHOICES = tuple(DOCUMENT_TYPE_LABELS.values())
@@ -57,6 +58,7 @@ DOCUMENT_TYPE_CHOICES = tuple(DOCUMENT_TYPE_LABELS.values())
 DOCUMENT_TYPE_PATTERNS = {
     "contestacao": ("contestacao",),
     "contrarrazoes": ("contrarrazoes", "contra razoes", "contra razao"),
+    "impugnacao": ("impugnacao",),
     "agravo_instrumento": ("agravo de instrumento",),
     "apelacao": ("apelacao",),
 }

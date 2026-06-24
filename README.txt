@@ -27,6 +27,7 @@ Principais recursos
   - Contestacao
   - Apelacao
   - Contrarrazoes / Contra-Razoes
+  - Impugnacao
   - Agravo de instrumento
   - Todos os documentos
 - Opcao para aproveitar o indice do Windows Search quando disponivel, com fallback automatico para a busca interna.
