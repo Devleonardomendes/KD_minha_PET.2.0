@@ -40,6 +40,7 @@ SOURCE_FILES = (
     ("Empacotamento", "build_exe.ps1"),
     ("Instalador", "installer/setup_installer.py"),
 )
+DEVELOPER_LABEL = f"DESENVOLVEDOR: {CREATOR} - PROCURADOR FEDERAL / AGU"
 
 
 def _set_tcl_library_paths(base_dirs: list[Path]) -> bool:
@@ -223,7 +224,7 @@ class KDMinhaPetApp(tk.Tk):
 
         creator = ttk.Label(
             header,
-            text=f"Criador: {CREATOR}",
+            text=DEVELOPER_LABEL,
             style="Creator.TLabel",
             background="#ffffff",
         )
@@ -252,8 +253,21 @@ class KDMinhaPetApp(tk.Tk):
             command=self.on_search_mode_changed,
         ).grid(row=0, column=2, sticky="w")
 
+        folder_row = ttk.Frame(controls)
+        folder_row.grid(row=1, column=0, sticky="ew", pady=(10, 0))
+        folder_row.columnconfigure(1, weight=1)
+
+        ttk.Label(folder_row, text="Pasta").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        self.folder_entry = ttk.Entry(folder_row, textvariable=self.folder_var)
+        self.folder_entry.grid(row=0, column=1, sticky="ew", ipady=3)
+        ttk.Button(folder_row, text="Selecionar...", command=self.select_folder).grid(
+            row=0,
+            column=2,
+            padx=(10, 0),
+        )
+
         query_row = ttk.Frame(controls)
-        query_row.grid(row=1, column=0, sticky="ew", pady=(10, 0))
+        query_row.grid(row=2, column=0, sticky="ew", pady=(10, 0))
         query_row.columnconfigure(1, weight=1)
 
         ttk.Label(query_row, text="Buscar").grid(row=0, column=0, sticky="w", padx=(0, 8))
@@ -268,19 +282,6 @@ class KDMinhaPetApp(tk.Tk):
         self.search_button.grid(row=0, column=2, padx=(10, 0), ipadx=10)
         self.stop_button = ttk.Button(query_row, text="Parar", command=self.stop_search, state="disabled")
         self.stop_button.grid(row=0, column=3, padx=(8, 0))
-
-        folder_row = ttk.Frame(controls)
-        folder_row.grid(row=2, column=0, sticky="ew", pady=(10, 0))
-        folder_row.columnconfigure(1, weight=1)
-
-        ttk.Label(folder_row, text="Pasta").grid(row=0, column=0, sticky="w", padx=(0, 8))
-        self.folder_entry = ttk.Entry(folder_row, textvariable=self.folder_var)
-        self.folder_entry.grid(row=0, column=1, sticky="ew", ipady=3)
-        ttk.Button(folder_row, text="Selecionar...", command=self.select_folder).grid(
-            row=0,
-            column=2,
-            padx=(10, 0),
-        )
 
         filter_row = ttk.Frame(controls)
         filter_row.grid(row=3, column=0, sticky="ew", pady=(10, 4))
@@ -434,7 +435,7 @@ class KDMinhaPetApp(tk.Tk):
         ttk.Label(footer, textvariable=self.memory_var).grid(row=0, column=2, sticky="e", padx=(0, 16))
         ttk.Label(
             footer,
-            text=f"Criador: {CREATOR}",
+            text=DEVELOPER_LABEL,
             style="Creator.TLabel",
         ).grid(row=0, column=3, sticky="e")
 
@@ -868,7 +869,7 @@ class KDMinhaPetApp(tk.Tk):
     def _build_log_export(self) -> str:
         lines = [
             APP_NAME,
-            f"Criador: {CREATOR}",
+            DEVELOPER_LABEL,
             f"Exportado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
             "",
             "Configuracao atual:",

@@ -3,7 +3,13 @@ KD_minha_PET 3.0
 
 Aplicativo Windows de busca local de peticoes e documentos juridicos.
 
-Criador: LEONARDO CARDOSO DE MELO TEIXEIRA MENDES.
+DESENVOLVEDOR: LEONARDO CARDOSO DE MELO TEIXEIRA MENDES - PROCURADOR FEDERAL / AGU
+
+Instalacao e desinstalacao
+--------------------------
+- Execute KD_minha_PET.3.0_Setup.exe para instalar o aplicativo no computador.
+- O instalador cria atalhos na area de trabalho e no menu Iniciar.
+- Para desinstalar, abra o Painel de Controle do Windows, entre em Programas e Recursos, selecione KD_minha_PET.3.0 e clique em desinstalar.
 
 Principais recursos
 -------------------
