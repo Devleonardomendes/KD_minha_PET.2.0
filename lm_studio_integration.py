@@ -15,7 +15,9 @@ import urllib.request
 from search_engine import (
     SearchResponse,
     SearchResult,
+    extract_document_lead_text,
     human_size,
+    normalize_text,
     smart_search,
 )
 
@@ -121,11 +123,20 @@ def lm_studio_semantic_search(
     year_end: int | None,
     document_type: str | None,
     use_windows_search: bool,
+    custom_document_type: str | None = None,
+    ai_instructions: str = "",
+    priority_negation: str = "",
     progress: ProgressCallback | None = None,
     log: LogCallback | None = None,
     stop_event=None,
 ) -> SearchResponse:
-    expanded_query = expand_natural_language_query(query, session=session, log=log)
+    priority_negation_terms = _parse_priority_negation_terms(priority_negation)
+    expanded_query = expand_natural_language_query(
+        query,
+        session=session,
+        ai_instructions=ai_instructions,
+        log=log,
+    )
     candidate_limit = min(max(max_results * 6, 40), MAX_AI_SEARCH_CANDIDATES)
     _log(log, f"Consulta expandida pelo LM Studio: {expanded_query}")
 
@@ -139,6 +150,7 @@ def lm_studio_semantic_search(
         year_start=year_start,
         year_end=year_end,
         document_type=document_type,
+        custom_document_type=custom_document_type,
         use_windows_search=use_windows_search,
         progress=progress,
         log=log,
@@ -161,9 +173,15 @@ def lm_studio_semantic_search(
         )
 
     if any("expressao entre aspas" in result.reason for result in response.results[:max_results]):
-        shown = response.results[:max_results]
+        ranked_results = _apply_priority_negation(
+            response.results,
+            priority_negation_terms,
+            pdf_ocr=pdf_ocr,
+            log=log,
+        )
+        shown = ranked_results[:max_results]
         if progress:
-            progress(response.scanned, response.total_matches, "")
+            progress(response.scanned, response.total_matches or len(ranked_results), "")
         return SearchResponse(
             results=shown,
             scanned=response.scanned,
@@ -175,28 +193,44 @@ def lm_studio_semantic_search(
             messages=response.messages
             + (
                 "Expressao entre aspas priorizada pela busca local; reranking por LM Studio dispensado.",
-            ),
+            )
+            + _priority_negation_messages(priority_negation_terms),
         )
 
     reranked = rerank_candidates(
         query,
         response.results[:MAX_AI_CANDIDATES],
         session=session,
+        ai_instructions=ai_instructions,
+        priority_negation_terms=priority_negation_terms,
         log=log,
     )
     if not reranked:
-        shown = response.results[:max_results]
+        ranked_results = _apply_priority_negation(
+            response.results,
+            priority_negation_terms,
+            pdf_ocr=pdf_ocr,
+            log=log,
+        )
+        shown = ranked_results[:max_results]
         if progress:
-            progress(response.scanned, response.total_matches, "")
+            progress(response.scanned, response.total_matches or len(ranked_results), "")
         return replace(
             response,
             results=shown,
             backend=f"LM Studio indisponivel no reranking + {response.backend}",
             messages=response.messages
-            + ("Reranking por LM Studio falhou; mantida relevancia local.",),
+            + ("Reranking por LM Studio falhou; mantida relevancia local.",)
+            + _priority_negation_messages(priority_negation_terms),
         )
 
     ranked_results = _merge_ai_ranking(response.results, reranked)
+    ranked_results = _apply_priority_negation(
+        ranked_results,
+        priority_negation_terms,
+        pdf_ocr=pdf_ocr,
+        log=log,
+    )
     shown = ranked_results[:max_results]
     if progress:
         progress(response.scanned, response.total_matches or len(ranked_results), "")
@@ -212,7 +246,8 @@ def lm_studio_semantic_search(
         messages=response.messages
         + (
             "Busca em linguagem natural: LM Studio expandiu a consulta e reordenou os candidatos locais.",
-        ),
+        )
+        + _priority_negation_messages(priority_negation_terms),
     )
 
 
@@ -220,17 +255,27 @@ def expand_natural_language_query(
     query: str,
     *,
     session: LMStudioSession,
+    ai_instructions: str = "",
     log: LogCallback | None = None,
 ) -> str:
     system = (
         "Voce ajuda a transformar uma pergunta juridica em termos objetivos de busca local. "
         "Responda em uma unica linha, sem JSON, sem markdown e sem explicacao."
     )
+    instruction_block = ""
+    if ai_instructions.strip():
+        instruction_block = (
+            "\n\nOrientacoes especiais do usuario para a busca. Use-as apenas para "
+            "orientar a selecao dos termos; nao copie instrucoes, exclusoes ou nomes "
+            f"de pastas como termos obrigatorios:\n{ai_instructions.strip()}"
+        )
+
     user = (
         "Extraia termos de busca em portugues juridico. Inclua sinonimos curtos, classes "
         "de pecas e expressoes provaveis encontradas em peticoes. Nao invente fatos. "
         "Limite a 220 caracteres.\n\n"
         f"Consulta do usuario: {query}"
+        f"{instruction_block}"
     )
     try:
         expanded = _clean_expanded_query(
@@ -251,6 +296,8 @@ def rerank_candidates(
     candidates: list[SearchResult],
     *,
     session: LMStudioSession,
+    ai_instructions: str = "",
+    priority_negation_terms: tuple[str, ...] = (),
     log: LogCallback | None = None,
 ) -> dict[int, tuple[float, str]]:
     rows = []
@@ -260,6 +307,7 @@ def rerank_candidates(
                 "id": index,
                 "nome": result.name,
                 "pasta": Path(result.path).parent.name[:120],
+                "caminho": result.path[:240],
                 "tipo": result.document_type or result.extension or "",
                 "tamanho": human_size(result.size),
                 "motivo_local": result.reason[:180],
@@ -271,10 +319,23 @@ def rerank_candidates(
         "Voce reordena resultados de busca juridica. Use apenas os dados fornecidos. "
         "Responda somente JSON valido."
     )
+    instruction_block = ""
+    if ai_instructions.strip():
+        instruction_block += (
+            "\nOrientacoes especiais do usuario: "
+            f"{ai_instructions.strip()}"
+        )
+    if priority_negation_terms:
+        instruction_block += (
+            "\nNegacao de Prioridade: candidatos que contenham estes termos devem "
+            "receber pontuacao muito baixa, salvo se os demais dados mostrarem que "
+            f"a correspondencia principal ainda e indispensavel: {', '.join(priority_negation_terms)}."
+        )
     user = (
         "Pontue a relevancia de cada candidato para a consulta em linguagem natural. "
         "Use escala 0 a 100. Nao altere ids. Seja criterioso.\n\n"
         f"Consulta: {query}\n\n"
+        f"{instruction_block}\n\n"
         f"Candidatos JSON: {json.dumps(rows, ensure_ascii=False)}\n\n"
         'Formato: {"resultados":[{"id":0,"score":95,"motivo":"..."}]}'
     )
@@ -598,6 +659,73 @@ def _merge_ai_ranking(
             output.append(result)
     output.sort(key=lambda item: (-item.score, -item.modified, item.name.casefold()))
     return output
+
+
+def _parse_priority_negation_terms(value: str) -> tuple[str, ...]:
+    terms: list[str] = []
+    for raw in re.split(r"[,;\n]+", value or ""):
+        normalized = normalize_text(raw)
+        if normalized and normalized not in terms:
+            terms.append(normalized)
+    return tuple(terms)
+
+
+def _priority_negation_messages(terms: tuple[str, ...]) -> tuple[str, ...]:
+    if not terms:
+        return ()
+    return ("Negacao de Prioridade aplicada aos candidatos em que os termos informados foram encontrados.",)
+
+
+def _apply_priority_negation(
+    results: list[SearchResult],
+    terms: tuple[str, ...],
+    *,
+    pdf_ocr: bool,
+    log: LogCallback | None,
+) -> list[SearchResult]:
+    if not terms:
+        return results
+
+    output: list[SearchResult] = []
+    penalized = 0
+    for result in results:
+        hits = _priority_negation_hits(result, terms, pdf_ocr=pdf_ocr)
+        if not hits:
+            output.append(result)
+            continue
+
+        penalized += 1
+        hit_label = ", ".join(hits[:3])
+        output.append(
+            replace(
+                result,
+                score=round(max(result.score * 0.25, 1), 2),
+                reason=f"{result.reason}; Negacao de Prioridade: {hit_label}",
+            )
+        )
+
+    if penalized:
+        _log(log, f"Negacao de Prioridade penalizou {penalized} candidato(s).")
+    output.sort(key=lambda item: (-item.score, -item.modified, item.name.casefold()))
+    return output
+
+
+def _priority_negation_hits(
+    result: SearchResult,
+    terms: tuple[str, ...],
+    *,
+    pdf_ocr: bool,
+) -> list[str]:
+    pieces = [result.name, result.path, result.snippet]
+    try:
+        lead_text = extract_document_lead_text(Path(result.path), result.size, pdf_ocr=pdf_ocr)
+    except (OSError, RuntimeError):
+        lead_text = ""
+    if lead_text:
+        pieces.append(lead_text)
+
+    haystack = normalize_text(" ".join(piece for piece in pieces if piece))
+    return [term for term in terms if term in haystack]
 
 
 def _run_lms(lms_path: Path, args: list[str], *, timeout: int) -> str:

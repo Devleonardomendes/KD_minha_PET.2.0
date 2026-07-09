@@ -11,13 +11,13 @@ import winreg
 import zipfile
 
 
-APP_NAME = "KD_minha_PET.3.0"
-APP_VERSION = "3.0"
+APP_NAME = "KD_minha_PET.4.0"
+APP_VERSION = "4.0"
 PUBLISHER = "LEONARDO CARDOSO DE MELO TEIXEIRA MENDES"
-INSTALLED_EXE = "KD_minha_PET.3.0.exe"
-PAYLOAD_APP_ZIP = "KDMinhaPET30-app.zip"
+INSTALLED_EXE = "KD_minha_PET.4.0.exe"
+PAYLOAD_APP_ZIP = "KDMinhaPET40-app.zip"
 PAYLOAD_README = "README.txt"
-UNINSTALL_SCRIPT = "uninstall_kd_minha_pet_3_0.ps1"
+UNINSTALL_SCRIPT = "uninstall_kd_minha_pet_4_0.ps1"
 UNINSTALL_REG_PATH = rf"Software\Microsoft\Windows\CurrentVersion\Uninstall\{APP_NAME}"
 
 
@@ -43,7 +43,7 @@ def _ps_quote(value: str) -> str:
 def _create_shortcuts(target: Path) -> None:
     target_text = _ps_quote(str(target))
     shortcut_name = _ps_quote(f"{APP_NAME}.lnk")
-    description = _ps_quote("KD_minha_PET.3.0 - busca local de arquivos")
+    description = _ps_quote("KD_minha_PET.4.0 - busca local de arquivos")
     command = (
         "$desktop=[Environment]::GetFolderPath('Desktop'); "
         "$programs=[Environment]::GetFolderPath('Programs'); "
@@ -87,7 +87,7 @@ def _estimated_size_kb(path: Path) -> int:
 
 def _create_uninstaller(destination_dir: Path) -> Path:
     uninstaller = destination_dir / UNINSTALL_SCRIPT
-    cleanup_name = "kd-minha-pet-3.0-cleanup.cmd"
+    cleanup_name = "kd-minha-pet-4.0-cleanup.cmd"
     script = f"""$ErrorActionPreference = 'SilentlyContinue'
 $appName = {_ps_quote(APP_NAME)}
 $installDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -192,7 +192,7 @@ def main() -> int:
 
 def self_test() -> int:
     source = _resource_path(PAYLOAD_APP_ZIP)
-    output_dir = Path(tempfile.gettempdir()) / "kd-minha-pet-3.0-setup-self-test"
+    output_dir = Path(tempfile.gettempdir()) / "kd-minha-pet-4.0-setup-self-test"
     output_dir.mkdir(parents=True, exist_ok=True)
     diagnostic = output_dir / "diagnostic.txt"
     diagnostic.write_text(

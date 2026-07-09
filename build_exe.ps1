@@ -1,7 +1,12 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$BuildTools = "S:\Backup da Pasta Trabalho\Resumator 5.1 - Enhanced\build-tools"
+$WorkspaceDir = Split-Path -Parent $ProjectDir
+$BuildToolsCandidates = @(
+    "S:\Backup da Pasta Trabalho\Resumator 5.1 - Enhanced\build-tools",
+    (Join-Path $WorkspaceDir "Resumator 5.1 - Enhanced\build-tools")
+)
+$BuildTools = $BuildToolsCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 $LegacyTkRuntime = Join-Path $ProjectDir "dist\KD_minha_PET\_internal"
 $IconPath = Join-Path $ProjectDir "assets\lupa.ico"
 $OcrScriptPath = Join-Path $ProjectDir "tools\ocr_windows.ps1"
@@ -23,8 +28,8 @@ if (-not (Test-Path $IconPath)) {
     & $PythonExe (Join-Path $ProjectDir "tools\create_icon.py")
 }
 
-if (-not (Test-Path $BuildTools)) {
-    throw "Nao encontrei as ferramentas locais de empacotamento: $BuildTools"
+if (-not $BuildTools -or -not (Test-Path $BuildTools)) {
+    throw "Nao encontrei as ferramentas locais de empacotamento."
 }
 
 if (-not (Test-Path $LegacyTkRuntime)) {
@@ -42,7 +47,7 @@ $env:PATH = "$BuildTools\bin;$env:PATH"
     --noconfirm `
     --clean `
     --windowed `
-    --name "KD_minha_PET.3.0" `
+    --name "KD_minha_PET.4.0" `
     --icon "$IconPath" `
     --add-data "$IconPath;assets" `
     --add-data "$OcrScriptPath;tools" `
@@ -65,7 +70,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "PyInstaller falhou ao gerar o aplicativo."
 }
 
-$DistAppDir = Join-Path $ProjectDir "dist\KD_minha_PET.3.0"
+$DistAppDir = Join-Path $ProjectDir "dist\KD_minha_PET.4.0"
 $DistInternalDir = Join-Path $DistAppDir "_internal"
 $TkRuntimeItems = @("_tcl_data", "_tk_data", "tcl8", "_tkinter.pyd", "tcl86t.dll", "tk86t.dll", "zlib1.dll")
 foreach ($Item in $TkRuntimeItems) {

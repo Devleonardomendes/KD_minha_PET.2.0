@@ -30,7 +30,7 @@ except Exception:  # pragma: no cover - optional runtime dependency.
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 
-APP_NAME = "KD_minha_PET 3.0"
+APP_NAME = "KD_minha_PET 4.0"
 CREATOR = "LEONARDO CARDOSO DE MELO TEIXEIRA MENDES"
 
 MAX_TEXT_BYTES = 1_500_000
@@ -45,6 +45,7 @@ WINDOWS_SEARCH_MAX_CANDIDATES = 5000
 WINDOWS_SEARCH_CANDIDATE_FACTOR = 10
 
 DOCUMENT_TYPE_ALL_KEY = "all"
+DOCUMENT_TYPE_CUSTOM_KEY = "custom"
 DOCUMENT_TYPE_LABELS = {
     DOCUMENT_TYPE_ALL_KEY: "Todos os documentos",
     "contestacao": "Contestação",
@@ -52,6 +53,7 @@ DOCUMENT_TYPE_LABELS = {
     "contrarrazoes": "Contrarrazões",
     "impugnacao": "Impugnação",
     "agravo_instrumento": "Agravo de instrumento",
+    DOCUMENT_TYPE_CUSTOM_KEY: "Outros",
 }
 DOCUMENT_TYPE_CHOICES = tuple(DOCUMENT_TYPE_LABELS.values())
 
@@ -216,6 +218,7 @@ class SearchIntent:
     date_from: datetime | None = None
     date_to: datetime | None = None
     document_type: str = DOCUMENT_TYPE_ALL_KEY
+    custom_document_type: str = ""
 
 
 @dataclass(frozen=True)
@@ -280,6 +283,8 @@ def coerce_document_type_key(value: str | None) -> str:
         return "contrarrazoes"
     if compact.startswith("agravo") or "agravodeinstrumento" in compact:
         return "agravo_instrumento"
+    if compact.startswith("outro"):
+        return DOCUMENT_TYPE_CUSTOM_KEY
     return DOCUMENT_TYPE_ALL_KEY
 
 
@@ -289,8 +294,15 @@ def _apply_explicit_filters(
     year_start: int | None = None,
     year_end: int | None = None,
     document_type: str | None = None,
+    custom_document_type: str | None = None,
 ) -> SearchIntent:
     explicit_from, explicit_to = _year_range_to_dates(year_start, year_end)
+    document_type_key = coerce_document_type_key(document_type)
+    custom_document_type = (
+        (custom_document_type or "").strip()
+        if document_type_key == DOCUMENT_TYPE_CUSTOM_KEY
+        else ""
+    )
 
     date_from = intent.date_from
     if explicit_from is not None:
@@ -304,7 +316,8 @@ def _apply_explicit_filters(
         intent,
         date_from=date_from,
         date_to=date_to,
-        document_type=coerce_document_type_key(document_type),
+        document_type=document_type_key,
+        custom_document_type=custom_document_type,
     )
 
 
@@ -374,6 +387,7 @@ def smart_search(
     year_start: int | None = None,
     year_end: int | None = None,
     document_type: str | None = None,
+    custom_document_type: str | None = None,
     use_windows_search: bool = False,
     progress: ProgressCallback | None = None,
     log: LogCallback | None = None,
@@ -385,6 +399,7 @@ def smart_search(
         year_start=year_start,
         year_end=year_end,
         document_type=document_type,
+        custom_document_type=custom_document_type,
     )
 
     if use_windows_search and os.name == "nt":
@@ -635,7 +650,18 @@ def _evaluate_path_candidate(
         return None
 
     document_type_label = ""
-    if intent.document_type != DOCUMENT_TYPE_ALL_KEY:
+    if intent.document_type == DOCUMENT_TYPE_CUSTOM_KEY:
+        if not intent.custom_document_type:
+            return None
+        if not document_matches_custom_type(
+            path,
+            intent.custom_document_type,
+            file_size=size,
+            pdf_ocr=pdf_ocr,
+        ):
+            return None
+        document_type_label = intent.custom_document_type
+    elif intent.document_type != DOCUMENT_TYPE_ALL_KEY:
         detected_key, detected_label = detect_document_type(path, size, pdf_ocr=pdf_ocr)
         if detected_key != intent.document_type:
             return None
@@ -858,6 +884,29 @@ def detect_document_type(
 
     _, _, key = min(matches)
     return key, DOCUMENT_TYPE_LABELS[key]
+
+
+def document_matches_custom_type(
+    path: Path,
+    custom_document_type: str,
+    file_size: int | None = None,
+    *,
+    pdf_ocr: bool = True,
+) -> bool:
+    expected = normalize_text(custom_document_type)
+    if not expected:
+        return False
+
+    text = extract_document_lead_text(path, file_size, pdf_ocr=pdf_ocr)
+    normalized = normalize_text(text[:12_000])
+    if not normalized:
+        return False
+
+    if expected in normalized:
+        return True
+
+    expected_terms = _phrase_terms(expected)
+    return bool(expected_terms) and all(term in normalized for term in expected_terms)
 
 
 def _parse_date_filters(normalized: str) -> tuple[datetime | None, datetime | None, set[str]]:

@@ -2,22 +2,27 @@ $ErrorActionPreference = "Stop"
 
 $InstallerDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $InstallerDir
-$BuildTools = "S:\Backup da Pasta Trabalho\Resumator 5.1 - Enhanced\build-tools"
+$WorkspaceDir = Split-Path -Parent $ProjectDir
+$BuildToolsCandidates = @(
+    "S:\Backup da Pasta Trabalho\Resumator 5.1 - Enhanced\build-tools",
+    (Join-Path $WorkspaceDir "Resumator 5.1 - Enhanced\build-tools")
+)
+$BuildTools = $BuildToolsCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 $DistDir = Join-Path $ProjectDir "dist"
-$AppDir = Join-Path $DistDir "KD_minha_PET.3.0"
+$AppDir = Join-Path $DistDir "KD_minha_PET.4.0"
 $PayloadDir = Join-Path $InstallerDir "payload"
-$PayloadZip = Join-Path $PayloadDir "KDMinhaPET30-app.zip"
+$PayloadZip = Join-Path $PayloadDir "KDMinhaPET40-app.zip"
 $SetupSpec = Join-Path $ProjectDir "build-spec\KD_minha_PET Setup.spec"
-$BuildDir = Join-Path $ProjectDir "build-setup"
+$BuildDir = Join-Path $ProjectDir "build-setup\4.0"
 $PreferredPython = "C:\Users\Leonardo\AppData\Local\Programs\Python\Python314\python.exe"
 $PythonExe = if (Test-Path $PreferredPython) { $PreferredPython } else { "python" }
 
-if (-not (Test-Path (Join-Path $AppDir "KD_minha_PET.3.0.exe"))) {
+if (-not (Test-Path (Join-Path $AppDir "KD_minha_PET.4.0.exe"))) {
     throw "Aplicativo nao encontrado em $AppDir. Gere o app principal antes do instalador."
 }
 
-if (-not (Test-Path $BuildTools)) {
-    throw "Nao encontrei as ferramentas locais de empacotamento: $BuildTools"
+if (-not $BuildTools -or -not (Test-Path $BuildTools)) {
+    throw "Nao encontrei as ferramentas locais de empacotamento."
 }
 
 New-Item -ItemType Directory -Force -Path $PayloadDir | Out-Null
@@ -38,7 +43,7 @@ finally {
     Pop-Location
 }
 
-$SetupExe = Join-Path $DistDir "KD_minha_PET.3.0 Setup.exe"
+$SetupExe = Join-Path $DistDir "KD_minha_PET.4.0 Setup.exe"
 if (-not (Test-Path $SetupExe)) {
     throw "Instalador nao gerado em $SetupExe"
 }

@@ -21,7 +21,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='KD_minha_PET.3.0',
+    name='KD_minha_PET.4.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -41,5 +41,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='KD_minha_PET.3.0',
+    name='KD_minha_PET.4.0',
 )

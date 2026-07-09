@@ -9,7 +9,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        (str(project_dir / "installer" / "payload" / "KDMinhaPET30-app.zip"), "."),
+        (str(project_dir / "installer" / "payload" / "KDMinhaPET40-app.zip"), "."),
         (str(project_dir / "installer" / "payload" / "README.txt"), "."),
     ],
     hiddenimports=[],
@@ -28,7 +28,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="KD_minha_PET.3.0 Setup",
+    name="KD_minha_PET.4.0 Setup",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

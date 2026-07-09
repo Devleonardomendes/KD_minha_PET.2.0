@@ -1,11 +1,11 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ExePath = Join-Path $ProjectDir "dist\KD_minha_PET.3.0\KD_minha_PET.3.0.exe"
+$ExePath = Join-Path $ProjectDir "dist\KD_minha_PET.4.0\KD_minha_PET.4.0.exe"
 $FallbackLauncher = Join-Path $ProjectDir "run_KD_minha_PET.bat"
 $IconPath = Join-Path $ProjectDir "assets\lupa.ico"
 $Desktop = [Environment]::GetFolderPath("Desktop")
-$ShortcutPath = Join-Path $Desktop "KD_minha_PET.3.0.lnk"
+$ShortcutPath = Join-Path $Desktop "KD_minha_PET.4.0.lnk"
 
 if (Test-Path $ExePath) {
     $TargetPath = $ExePath
@@ -19,7 +19,7 @@ $Shell = New-Object -ComObject WScript.Shell
 $Shortcut = $Shell.CreateShortcut($ShortcutPath)
 $Shortcut.TargetPath = $TargetPath
 $Shortcut.WorkingDirectory = $ProjectDir
-$Shortcut.Description = "KD_minha_PET.3.0 - busca inteligente de arquivos"
+$Shortcut.Description = "KD_minha_PET.4.0 - busca inteligente de arquivos"
 if (Test-Path $IconPath) {
     $Shortcut.IconLocation = $IconPath
 }

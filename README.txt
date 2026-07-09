@@ -1,4 +1,4 @@
-KD_minha_PET 3.0
+KD_minha_PET 4.0
 ================
 
 Aplicativo Windows de busca local de peticoes e documentos juridicos.
@@ -7,14 +7,14 @@ DESENVOLVEDOR: LEONARDO CARDOSO DE MELO TEIXEIRA MENDES - PROCURADOR FEDERAL / A
 
 Download
 --------
-- Baixe o instalador Windows em downloads\KD_minha_PET.3.0_Setup.exe.
+- Baixe o instalador Windows em downloads\KD_minha_PET.4.0_Setup.exe.
 - Tutorial de excecao no Windows: TUTORIAL_EXCECAO_FIREWALL_WINDOWS.txt.
 
 Instalacao e desinstalacao
 --------------------------
-- Execute KD_minha_PET.3.0_Setup.exe para instalar o aplicativo no computador.
+- Execute KD_minha_PET.4.0_Setup.exe para instalar o aplicativo no computador.
 - O instalador cria atalhos na area de trabalho e no menu Iniciar.
-- Para desinstalar, abra o Painel de Controle do Windows, entre em Programas e Recursos, selecione KD_minha_PET.3.0 e clique em desinstalar.
+- Para desinstalar, abra o Painel de Controle do Windows, entre em Programas e Recursos, selecione KD_minha_PET.4.0 e clique em desinstalar.
 
 Principais recursos
 -------------------
@@ -29,9 +29,12 @@ Principais recursos
   - Contrarrazoes / Contra-Razoes
   - Impugnacao
   - Agravo de instrumento
+  - Outros
   - Todos os documentos
+- Campo "Outros" em tipo de documento para informar manualmente o nome da peca a buscar.
 - Opcao para aproveitar o indice do Windows Search quando disponivel, com fallback automatico para a busca interna.
 - Modo "Usar o LM Studio para Busca com Linguagem Natural", usando modelo local do LM Studio para expandir a consulta e reordenar os candidatos encontrados.
+- Campos "Orientações para IA" e "Negação de Prioridade" no modo LM Studio.
 - Modo "Busca local com termos de pesquisa (nao usar o LM Studio)" para manter a busca tradicional.
 - Botao "Exportar logs", disponivel mesmo quando nao houve erro.
 - Botao "README" para consultar estas instrucoes dentro do proprio aplicativo.
@@ -39,18 +42,19 @@ Principais recursos
 
 Como usar
 ---------
-1. Abra o KD_minha_PET 3.0.
+1. Abra o KD_minha_PET 4.0.
 2. Escolha a pasta em que os documentos serao pesquisados.
 3. Escolha o modo de busca:
    - "Usar o LM Studio para Busca com Linguagem Natural"
    - "Busca local com termos de pesquisa (nao usar o LM Studio)"
-4. Digite os termos ou a pergunta da busca.
+4. Digite os termos ou a pergunta em "Palavras de busca".
 5. Escolha quantos resultados deseja exibir.
 6. Preencha "Ano inicial" e/ou "Ano final" se quiser restringir por ano de modificacao do arquivo.
-7. Escolha o tipo de documento, se quiser restringir pelo nome da peca exibido na primeira pagina.
-8. Marque "Usar indice do Windows Search quando disponivel" se quiser tentar acelerar a busca com o indice do Windows.
-9. Clique em "Buscar".
-10. Use "README" para abrir estas instrucoes dentro do aplicativo.
+7. Escolha o tipo de documento, se quiser restringir pelo nome da peca exibido na primeira pagina. Se escolher "Outros", preencha o nome da peca.
+8. No modo LM Studio, use "Orientações para IA" para instrucoes especiais de busca e "Negação de Prioridade" para termos que devem reduzir fortemente a relevancia.
+9. Marque "Usar indice do Windows Search quando disponivel" se quiser tentar acelerar a busca com o indice do Windows.
+10. Clique em "Buscar".
+11. Use "README" para abrir estas instrucoes dentro do aplicativo.
 
 Modo LM Studio
 --------------
@@ -58,7 +62,9 @@ Modo LM Studio
 - O botao "OK" so aparece quando o aplicativo termina de abrir o LM Studio, iniciar o servidor local e selecionar/carregar o ultimo modelo identificado.
 - O LM Studio roda localmente, em http://127.0.0.1:1234.
 - O aplicativo tenta usar um modelo ja carregado. Se nenhum modelo estiver carregado, usa o ultimo modelo local identificado pelo historico do LM Studio.
-- No modo LM Studio, voce pode usar linguagem natural no campo de busca. O LM Studio interpreta a pergunta e gera termos juridicos relacionados antes da varredura local.
+- No modo LM Studio, voce pode usar linguagem natural em "Palavras de busca". O LM Studio interpreta a pergunta e gera termos juridicos relacionados antes da varredura local.
+- Use "Orientações para IA" para instrucoes especiais, como evitar certa expressao, priorizar uma pasta ou aplicar uma regra de interpretacao.
+- Use "Negação de Prioridade" para palavras ou expressoes que, quando encontradas em um candidato, devem reduzir muito sua relevancia.
 - A IA nao substitui a leitura dos arquivos: depois da expansao da consulta, o KD_minha_PET procura nos nomes, caminhos e conteudo extraivel dos documentos; em seguida, o LM Studio pode reordenar os candidatos encontrados.
 - Para procurar uma frase literal, escreva a expressao entre aspas. Nesse caso, o KD_minha_PET prioriza a correspondencia local da expressao e evita que o reranking por IA rebaixe esse resultado.
 - No modo "Busca local com termos de pesquisa (nao usar o LM Studio)", prefira palavras-chave objetivas, nomes de pecas, numeros de processo ou expressoes exatas.
@@ -69,6 +75,7 @@ Observacoes sobre filtros
 - O filtro de ano usa a data de modificacao do arquivo no Windows.
 - Para restringir a um unico ano, preencha o mesmo ano em "Ano inicial" e "Ano final".
 - O filtro de tipo de documento depende de texto extraivel da primeira pagina ou do inicio do documento.
+- Na opcao "Outros", o nome da peca digitado tambem e procurado nesse texto inicial.
 - PDFs escaneados podem exigir OCR para que o tipo de documento seja reconhecido.
 - Quando o Windows Search nao esta disponivel, nao tem permissao ou nao retorna candidatos indexados, o aplicativo registra o fato no log e usa a busca interna.
 
@@ -82,8 +89,8 @@ Use "Exportar logs" para salvar:
 
 Empacotamento
 -------------
-- O executavel principal gerado deve se chamar KD_minha_PET.3.0.exe.
-- O instalador gerado deve se chamar KD_minha_PET.3.0 Setup.exe.
+- O executavel principal gerado deve se chamar KD_minha_PET.4.0.exe.
+- O instalador gerado deve se chamar KD_minha_PET.4.0 Setup.exe.
 - O script principal de build e build_exe.ps1.
 - O script de instalador e installer/build_setup.ps1.
 

@@ -22,6 +22,7 @@ from search_engine import (
     DOCUMENT_TYPE_CHOICES,
     DOCUMENT_TYPE_LABELS,
     DOCUMENT_TYPE_ALL_KEY,
+    DOCUMENT_TYPE_CUSTOM_KEY,
     SearchResponse,
     SearchResult,
     coerce_document_type_key,
@@ -170,10 +171,12 @@ class KDMinhaPetApp(tk.Tk):
         self.pdf_ocr_var = tk.BooleanVar(value=True)
         self.skip_technical_var = tk.BooleanVar(value=True)
         self.use_windows_search_var = tk.BooleanVar(value=False)
+        self.priority_negation_var = tk.StringVar()
         self.max_results_var = tk.StringVar(value="50")
         self.year_start_var = tk.StringVar()
         self.year_end_var = tk.StringVar()
         self.document_type_var = tk.StringVar(value=DOCUMENT_TYPE_LABELS[DOCUMENT_TYPE_ALL_KEY])
+        self.custom_document_type_var = tk.StringVar()
         self.status_var = tk.StringVar(value="Pronto.")
         self.cpu_var = tk.StringVar(value="CPU: --%")
         self.memory_var = tk.StringVar(value="RAM: --%")
@@ -233,7 +236,7 @@ class KDMinhaPetApp(tk.Tk):
         controls = ttk.Frame(self, padding=(18, 14, 18, 10))
         controls.grid(row=1, column=0, sticky="nsew")
         controls.columnconfigure(0, weight=1)
-        controls.rowconfigure(6, weight=1)
+        controls.rowconfigure(7, weight=1)
 
         mode_row = ttk.Frame(controls)
         mode_row.grid(row=0, column=0, sticky="ew")
@@ -270,7 +273,7 @@ class KDMinhaPetApp(tk.Tk):
         query_row.grid(row=2, column=0, sticky="ew", pady=(10, 0))
         query_row.columnconfigure(1, weight=1)
 
-        ttk.Label(query_row, text="Buscar").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(query_row, text="Palavras de busca").grid(row=0, column=0, sticky="w", padx=(0, 8))
         self.query_entry = ttk.Entry(query_row, textvariable=self.query_var, font=("Segoe UI", 11))
         self.query_entry.grid(row=0, column=1, sticky="ew", ipady=4)
         self.search_button = ttk.Button(
@@ -283,8 +286,42 @@ class KDMinhaPetApp(tk.Tk):
         self.stop_button = ttk.Button(query_row, text="Parar", command=self.stop_search, state="disabled")
         self.stop_button.grid(row=0, column=3, padx=(8, 0))
 
+        self.ai_options_frame = ttk.Frame(controls)
+        self.ai_options_frame.grid(row=3, column=0, sticky="ew", pady=(8, 0))
+        self.ai_options_frame.columnconfigure(1, weight=1)
+
+        ttk.Label(self.ai_options_frame, text="Orientações para IA").grid(
+            row=0,
+            column=0,
+            sticky="nw",
+            padx=(0, 8),
+            pady=(3, 0),
+        )
+        self.ai_instructions_text = tk.Text(
+            self.ai_options_frame,
+            height=3,
+            wrap="word",
+            font=("Segoe UI", 10),
+            relief="solid",
+            borderwidth=1,
+        )
+        self.ai_instructions_text.grid(row=0, column=1, sticky="ew", ipady=2)
+
+        ttk.Label(self.ai_options_frame, text="Negação de Prioridade").grid(
+            row=1,
+            column=0,
+            sticky="w",
+            padx=(0, 8),
+            pady=(8, 0),
+        )
+        self.priority_negation_entry = ttk.Entry(
+            self.ai_options_frame,
+            textvariable=self.priority_negation_var,
+        )
+        self.priority_negation_entry.grid(row=1, column=1, sticky="ew", ipady=3, pady=(8, 0))
+
         filter_row = ttk.Frame(controls)
-        filter_row.grid(row=3, column=0, sticky="ew", pady=(10, 4))
+        filter_row.grid(row=4, column=0, sticky="ew", pady=(10, 4))
 
         ttk.Label(filter_row, text="Resultados").grid(row=0, column=0, sticky="w", padx=(0, 8))
         self.max_results_combo = ttk.Combobox(
@@ -319,8 +356,23 @@ class KDMinhaPetApp(tk.Tk):
         )
         self.document_type_combo.grid(row=0, column=7, sticky="w")
 
+        self.custom_document_type_label = ttk.Label(filter_row, text="Nome da peça")
+        self.custom_document_type_label.grid(
+            row=1,
+            column=6,
+            sticky="w",
+            padx=(0, 8),
+            pady=(6, 0),
+        )
+        self.custom_document_type_entry = ttk.Entry(
+            filter_row,
+            textvariable=self.custom_document_type_var,
+            width=24,
+        )
+        self.custom_document_type_entry.grid(row=1, column=7, sticky="w", pady=(6, 0))
+
         options_row = ttk.Frame(controls)
-        options_row.grid(row=4, column=0, sticky="ew", pady=(6, 4))
+        options_row.grid(row=5, column=0, sticky="ew", pady=(6, 4))
         ttk.Checkbutton(
             options_row,
             text="Ler conteudo quando possivel",
@@ -343,7 +395,7 @@ class KDMinhaPetApp(tk.Tk):
         ).grid(row=0, column=3, sticky="w", padx=(18, 0))
 
         action_row = ttk.Frame(controls)
-        action_row.grid(row=5, column=0, sticky="ew", pady=(4, 8))
+        action_row.grid(row=6, column=0, sticky="ew", pady=(4, 8))
         ttk.Button(action_row, text="Abrir arquivo", command=self.open_selected_file).grid(
             row=0,
             column=0,
@@ -376,7 +428,7 @@ class KDMinhaPetApp(tk.Tk):
         )
 
         content = ttk.PanedWindow(controls, orient=tk.VERTICAL)
-        content.grid(row=6, column=0, sticky="nsew")
+        content.grid(row=7, column=0, sticky="nsew")
 
         table_frame = ttk.Frame(content)
         table_frame.columnconfigure(0, weight=1)
@@ -440,12 +492,20 @@ class KDMinhaPetApp(tk.Tk):
         ).grid(row=0, column=3, sticky="e")
 
         self.query_entry.focus_set()
+        self._update_ai_options_visibility()
+        self._update_custom_document_type_visibility()
 
     def _bind_events(self) -> None:
         self.query_entry.bind("<Return>", lambda _event: self.start_search())
         self.folder_entry.bind("<Return>", lambda _event: self.start_search())
         self.year_start_entry.bind("<Return>", lambda _event: self.start_search())
         self.year_end_entry.bind("<Return>", lambda _event: self.start_search())
+        self.priority_negation_entry.bind("<Return>", lambda _event: self.start_search())
+        self.custom_document_type_entry.bind("<Return>", lambda _event: self.start_search())
+        self.document_type_combo.bind(
+            "<<ComboboxSelected>>",
+            lambda _event: self._update_custom_document_type_visibility(),
+        )
         self.tree.bind("<<TreeviewSelect>>", lambda _event: self.show_selected_details())
         self.tree.bind("<Double-1>", lambda _event: self.open_selected_file())
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -459,6 +519,26 @@ class KDMinhaPetApp(tk.Tk):
                 self.status_var.set("Busca local selecionada.")
         else:
             self.status_var.set("Busca local selecionada.")
+        self._update_ai_options_visibility()
+
+    def _update_ai_options_visibility(self) -> None:
+        if self.search_mode_var.get() == "lmstudio":
+            self.ai_options_frame.grid()
+        else:
+            self.ai_options_frame.grid_remove()
+
+    def _update_custom_document_type_visibility(self) -> None:
+        document_type_key = coerce_document_type_key(self.document_type_var.get())
+        if document_type_key == DOCUMENT_TYPE_CUSTOM_KEY:
+            self.custom_document_type_label.grid()
+            self.custom_document_type_entry.grid()
+            self.custom_document_type_entry.focus_set()
+        else:
+            self.custom_document_type_label.grid_remove()
+            self.custom_document_type_entry.grid_remove()
+
+    def _get_ai_instructions(self) -> str:
+        return self.ai_instructions_text.get("1.0", "end").strip()
 
     def ensure_lm_studio_ready(self) -> bool:
         if self.lm_studio_session is not None:
@@ -573,7 +653,7 @@ class KDMinhaPetApp(tk.Tk):
         if folder:
             self.folder_var.set(folder)
 
-    def _read_search_options(self) -> tuple[int, int | None, int | None, str, str]:
+    def _read_search_options(self) -> tuple[int, int | None, int | None, str, str, str]:
         try:
             max_results = int(self.max_results_var.get())
         except ValueError as exc:
@@ -589,7 +669,14 @@ class KDMinhaPetApp(tk.Tk):
 
         document_type_label = self.document_type_var.get().strip() or DOCUMENT_TYPE_LABELS[DOCUMENT_TYPE_ALL_KEY]
         document_type_key = coerce_document_type_key(document_type_label)
-        return max_results, year_start, year_end, document_type_key, document_type_label
+        custom_document_type = ""
+        if document_type_key == DOCUMENT_TYPE_CUSTOM_KEY:
+            custom_document_type = self.custom_document_type_var.get().strip()
+            if not custom_document_type:
+                raise ValueError("Digite o nome da peça para o tipo de documento Outros.")
+            document_type_label = f"Outros: {custom_document_type}"
+
+        return max_results, year_start, year_end, document_type_key, document_type_label, custom_document_type
 
     @staticmethod
     def _parse_year_field(value: str, label: str) -> int | None:
@@ -609,7 +696,7 @@ class KDMinhaPetApp(tk.Tk):
 
         query = self.query_var.get().strip()
         if not query:
-            messagebox.showinfo(APP_NAME, "Digite o que deseja buscar.")
+            messagebox.showinfo(APP_NAME, "Digite as palavras de busca.")
             self.query_entry.focus_set()
             return
 
@@ -626,9 +713,14 @@ class KDMinhaPetApp(tk.Tk):
             return
 
         try:
-            max_results, year_start, year_end, document_type_key, document_type_label = (
-                self._read_search_options()
-            )
+            (
+                max_results,
+                year_start,
+                year_end,
+                document_type_key,
+                document_type_label,
+                custom_document_type,
+            ) = self._read_search_options()
         except ValueError as exc:
             messagebox.showerror(APP_NAME, str(exc))
             return
@@ -638,9 +730,12 @@ class KDMinhaPetApp(tk.Tk):
         skip_technical_dirs = self.skip_technical_var.get()
         use_windows_search = self.use_windows_search_var.get()
         search_mode = self.search_mode_var.get()
+        ai_instructions = self._get_ai_instructions() if search_mode == "lmstudio" else ""
+        priority_negation = self.priority_negation_var.get().strip() if search_mode == "lmstudio" else ""
         if search_mode == "lmstudio" and self.lm_studio_session is None:
             if not self.ensure_lm_studio_ready():
                 self.search_mode_var.set("local")
+                self._update_ai_options_visibility()
                 return
 
         lm_studio_session = self.lm_studio_session
@@ -655,6 +750,8 @@ class KDMinhaPetApp(tk.Tk):
             f"ano_inicial={year_start or '-'} | ano_final={year_end or '-'} | "
             f"tipo_documento={document_type_label!r} | "
             f"modo={'LM Studio' if search_mode == 'lmstudio' else 'local'} | "
+            f"orientacoes_ia={'sim' if ai_instructions else 'nao'} | "
+            f"negacao_prioridade={'sim' if priority_negation else 'nao'} | "
             f"windows_search={'sim' if use_windows_search else 'nao'} | "
             f"conteudo={'sim' if include_content else 'nao'} | "
             f"ocr={'sim' if pdf_ocr else 'nao'} | "
@@ -677,7 +774,10 @@ class KDMinhaPetApp(tk.Tk):
                         year_start=year_start,
                         year_end=year_end,
                         document_type=document_type_key,
+                        custom_document_type=custom_document_type,
                         use_windows_search=use_windows_search,
+                        ai_instructions=ai_instructions,
+                        priority_negation=priority_negation,
                         progress=lambda scanned, matched, current: self.worker_queue.put(
                             ("progress", (scanned, matched, current))
                         ),
@@ -695,6 +795,7 @@ class KDMinhaPetApp(tk.Tk):
                         year_start=year_start,
                         year_end=year_end,
                         document_type=document_type_key,
+                        custom_document_type=custom_document_type,
                         use_windows_search=use_windows_search,
                         progress=lambda scanned, matched, current: self.worker_queue.put(
                             ("progress", (scanned, matched, current))
@@ -874,13 +975,16 @@ class KDMinhaPetApp(tk.Tk):
             "",
             "Configuracao atual:",
             f"- Pasta: {self.folder_var.get().strip() or '-'}",
-            f"- Busca: {self.query_var.get().strip() or '-'}",
+            f"- Palavras de busca: {self.query_var.get().strip() or '-'}",
             f"- Resultados exibidos: {self.max_results_var.get()}",
             f"- Ano inicial: {self.year_start_var.get().strip() or '-'}",
             f"- Ano final: {self.year_end_var.get().strip() or '-'}",
             f"- Tipo de documento: {self.document_type_var.get().strip() or '-'}",
+            f"- Nome da peça em Outros: {self.custom_document_type_var.get().strip() or '-'}",
             f"- Modo de busca: {'LM Studio' if self.search_mode_var.get() == 'lmstudio' else 'local'}",
             f"- Modelo LM Studio: {self.lm_studio_session.display_name if self.lm_studio_session else '-'}",
+            f"- Orientações para IA: {self._get_ai_instructions() or '-'}",
+            f"- Negação de Prioridade: {self.priority_negation_var.get().strip() or '-'}",
             f"- Windows Search: {'sim' if self.use_windows_search_var.get() else 'nao'}",
             f"- Ler conteudo: {'sim' if self.include_content_var.get() else 'nao'}",
             f"- OCR em PDFs: {'sim' if self.pdf_ocr_var.get() else 'nao'}",
@@ -1165,7 +1269,7 @@ def main() -> None:
 def self_test() -> int:
     from PIL import Image, ImageDraw, ImageFont
 
-    test_dir = Path(tempfile.gettempdir()) / "KD_minha_PET.3.0_self_test"
+    test_dir = Path(tempfile.gettempdir()) / "KD_minha_PET.4.0_self_test"
     test_dir.mkdir(parents=True, exist_ok=True)
     sample = test_dir / "peticao_teste_prescricao.txt"
     sample.write_text("Modelo de peticao sobre prescricao intercorrente.", encoding="utf-8")
