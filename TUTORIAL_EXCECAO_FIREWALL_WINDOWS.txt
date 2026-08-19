@@ -1,4 +1,4 @@
-TUTORIAL - EXCECAO NO WINDOWS PARA BAIXAR E EXECUTAR RESUMATOR 10.1 E KD_MINHA_PET.3.0
+TUTORIAL - EXCECAO NO WINDOWS PARA BAIXAR E EXECUTAR RESUMATOR 10.1 E KD_MINHA_PET.4.0
 
 Aplicativos cobertos:
 
@@ -7,10 +7,10 @@ Aplicativos cobertos:
    Instalador: downloads/Resumator_10.1_Setup.exe
    Executavel instalado: %LOCALAPPDATA%\Programs\Resumator 10.1\Resumator 10.1.exe
 
-2. KD_minha_PET.3.0
-   GitHub: https://github.com/Devleonardomendes/KD_minha_PET.2.0
-   Instalador: downloads/KD_minha_PET.3.0_Setup.exe
-   Executavel instalado: %LOCALAPPDATA%\Programs\KD_minha_PET.3.0\KD_minha_PET.3.0.exe
+2. KD_minha_PET.4.0
+   GitHub: https://github.com/Devleonardomendes/KD_minha_PET.4.0
+   Instalador: downloads/KD_minha_PET.4.0_Setup.exe
+   Executavel instalado: %LOCALAPPDATA%\Programs\KD_minha_PET.4.0\KD_minha_PET.4.0.exe
 
 Observacao importante:
 
@@ -47,7 +47,7 @@ Google Chrome:
 4. Clique em "Historico de protecao".
 5. Localize o alerta relacionado ao instalador:
    - Resumator_10.1_Setup.exe
-   - KD_minha_PET.3.0_Setup.exe
+   - KD_minha_PET.4.0_Setup.exe
 6. Abra o item do alerta.
 7. Clique em "Acoes".
 8. Escolha "Permitir no dispositivo" somente se o arquivo veio do GitHub oficial.
@@ -66,12 +66,12 @@ Esta etapa evita que o Defender remova ou coloque em quarentena o instalador ou 
 7. Escolha "Arquivo".
 8. Selecione o instalador baixado:
    - %USERPROFILE%\Downloads\Resumator_10.1_Setup.exe
-   - %USERPROFILE%\Downloads\KD_minha_PET.3.0_Setup.exe
+   - %USERPROFILE%\Downloads\KD_minha_PET.4.0_Setup.exe
 
 Depois de instalar, se o Windows continuar bloqueando a abertura do aplicativo, repita o procedimento e selecione o executavel instalado:
 
 - %LOCALAPPDATA%\Programs\Resumator 10.1\Resumator 10.1.exe
-- %LOCALAPPDATA%\Programs\KD_minha_PET.3.0\KD_minha_PET.3.0.exe
+- %LOCALAPPDATA%\Programs\KD_minha_PET.4.0\KD_minha_PET.4.0.exe
 
 Recomendacao:
 
@@ -89,7 +89,7 @@ Use esta etapa se, ao abrir o aplicativo, o Windows perguntar se ele pode acessa
 5. Clique em "Procurar".
 6. Selecione o executavel instalado:
    - %LOCALAPPDATA%\Programs\Resumator 10.1\Resumator 10.1.exe
-   - %LOCALAPPDATA%\Programs\KD_minha_PET.3.0\KD_minha_PET.3.0.exe
+   - %LOCALAPPDATA%\Programs\KD_minha_PET.4.0\KD_minha_PET.4.0.exe
 7. Clique em "Adicionar".
 8. Marque "Privada".
 9. Marque "Publica" somente se voce realmente usar o aplicativo em rede publica.
@@ -103,17 +103,17 @@ Execute o PowerShell como administrador.
 Adicionar exclusao do Microsoft Defender para os instaladores baixados:
 
 Add-MpPreference -ExclusionPath "$env:USERPROFILE\Downloads\Resumator_10.1_Setup.exe"
-Add-MpPreference -ExclusionPath "$env:USERPROFILE\Downloads\KD_minha_PET.3.0_Setup.exe"
+Add-MpPreference -ExclusionPath "$env:USERPROFILE\Downloads\KD_minha_PET.4.0_Setup.exe"
 
 Adicionar exclusao do Microsoft Defender para os executaveis instalados:
 
 Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Programs\Resumator 10.1\Resumator 10.1.exe"
-Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Programs\KD_minha_PET.3.0\KD_minha_PET.3.0.exe"
+Add-MpPreference -ExclusionPath "$env:LOCALAPPDATA\Programs\KD_minha_PET.4.0\KD_minha_PET.4.0.exe"
 
 Criar regras de saida no Windows Firewall:
 
 New-NetFirewallRule -DisplayName "Resumator 10.1" -Direction Outbound -Program "$env:LOCALAPPDATA\Programs\Resumator 10.1\Resumator 10.1.exe" -Action Allow
-New-NetFirewallRule -DisplayName "KD_minha_PET.3.0" -Direction Outbound -Program "$env:LOCALAPPDATA\Programs\KD_minha_PET.3.0\KD_minha_PET.3.0.exe" -Action Allow
+New-NetFirewallRule -DisplayName "KD_minha_PET.4.0" -Direction Outbound -Program "$env:LOCALAPPDATA\Programs\KD_minha_PET.4.0\KD_minha_PET.4.0.exe" -Action Allow
 
 
 6. CONFERENCIA FINAL
@@ -123,7 +123,7 @@ Antes de executar:
 1. Confirme que o arquivo foi baixado do GitHub oficial.
 2. Confirme que o nome do instalador esta correto:
    - Resumator_10.1_Setup.exe
-   - KD_minha_PET.3.0_Setup.exe
+   - KD_minha_PET.4.0_Setup.exe
 3. Execute o instalador.
 4. Abra o aplicativo pelo atalho criado na Area de Trabalho ou pelo Menu Iniciar.
 
